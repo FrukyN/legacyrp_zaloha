@@ -1,0 +1,173 @@
+@import url('https://use.fontawesome.com/releases/v6.5.0/css/all.css');
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Chakra Petch:ital,wght@0,100..900;1,100..900&display=swap');
+
+.color-0{color: #ffffff;}
+.color-1{color: #ff4444;}
+.color-2{color: #16cf16;}
+.color-3{color: #ffe600;}
+.color-4{color: #0099cc;}
+.color-5{color: #1100ff;}
+.color-6{color: #ac06ff;}
+.color-7{color: #868484;}
+.color-8{color: #cc0000;}
+.color-9{color: #cc0068;}
+
+* {
+  font-family: 'Chakra Petch', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.no-grow {
+  flex-grow: 0;
+}
+
+em {
+  font-style: normal;
+}
+
+#app {
+  font-family: 'Chakra Petch', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: white;
+}
+
+.chat-window {
+  position: absolute;
+  top: 15px;
+  left: 10px;
+  width: 30%;
+  height: 340px;
+  background-color: rgba(0, 30, 46, 0.7);
+  -webkit-animation-duration: 1s;
+}
+
+
+.chat-messages {
+  position: relative;
+  height: 95%;
+  font-size: 1.0rem;
+  padding: 10px;
+  text-shadow: 2px 2px 2px #000000;
+
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+
+.chat-input {
+  font-size: 1.1rem;
+  text-shadow: 2px 2px 2px #000000;
+  position: absolute;
+
+  top: 257px;
+  left: 25px;
+  width: 30%;
+
+  box-sizing: border-box;
+}
+
+.prefix {
+  position: absolute;
+  margin-top: 2px;
+  left: 4px;
+}
+
+.suffix {
+  transition: color .4s ease-in-out;
+  position: absolute;
+  margin-top: 3px;
+  right: 5px;
+  color: gray;
+}
+
+textarea {
+
+  font-size: 1.1rem;
+  text-align: left;
+  justify-content: center;
+  display: block;
+  text-shadow: 2px 2px 2px #000000;
+  box-sizing: border-box;
+  padding: 6px;
+  padding-left: 5px;
+  color: white;
+  background-color: #020202b6;
+  border: none;
+  outline: none;
+  border-radius: 2px;
+  width: 70%;
+  height: 36px;
+  overflow: hidden;
+  resize: none;
+}
+
+.textareaError {
+  text-shadow: none!important;
+  transition: background-color .4s ease-in-out;
+  background-color: rgb(255, 0, 0);
+}
+
+.loocError {
+  transition: color .4s ease-in-out;
+  color: rgb(255, 0, 0);
+  animation: shake 0.7s;
+}
+
+@keyframes shake {
+  10%, 90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+
+  20%, 80% {
+    transform: translate3d(2px, 0, 0);
+  }
+
+  30%, 50%, 70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+
+  40%, 60% {
+    transform: translate3d(4px, 0, 0);
+  }
+}
+
+textarea:focus, input:focus {
+    outline: none;
+}
+
+.msg {
+  margin-bottom: 1px;
+}
+
+.multiline {
+  margin-left: 1.5rem;
+  text-indent: -1.5rem;
+  white-space: pre-line;
+}
+
+.suggestions {
+  list-style-type: none;
+  margin-top: 6px;
+  padding: 6px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  width: 70%;
+  color: white;
+  background-color: rgba(24, 24, 24, 0.568);
+  border: none;
+  border-radius: 2px;
+}
+
+.help {
+  color: #b0bbbd;
+}
+
+.disabled {
+  color: #b0bbbd;
+}
+
+.suggestion {
+  margin-bottom: 5px;
+}

@@ -1,0 +1,259 @@
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: "Chakra Petch", sans-serif;
+    color: #edf3ff;
+}
+
+/* ==================================
+   FILMOVÉ PRUHY (CINEMATIC BARS)
+   ================================== */
+.cinematic-bar {
+    position: absolute;
+    left: 0;
+    width: 100vw;
+    height: 12vh; /* Můžeš zvětšit/zmenšit tloušťku pruhů (teď 12% obrazovky) */
+    background-color: black;
+    z-index: 9999; /* Musí být nad vším ostatním */
+    transition: transform 0.6s ease-in-out; /* Plynulý posuv na 0.6 sekundy */
+}
+#cinematic-top {
+    top: 0;
+    transform: translateY(-100%); /* Výchozí stav: schované nad obrazovkou */
+}
+#cinematic-bottom {
+    bottom: 0;
+    transform: translateY(100%); /* Výchozí stav: schované pod obrazovkou */
+}
+#cinematic-top.active, #cinematic-bottom.active {
+    transform: translateY(0); /* Zobrazí se zpět na obrazovce */
+}
+
+/* ================================== */
+
+.hidden { display: none !important; }
+#hud-container { position: absolute; width: 100vw; height: 100vh; }
+
+/* FIXNÍ LOGO VPRAVO NAHOŘE */
+#server-logo { 
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 100px; 
+    opacity: 0.8; 
+    z-index: 50;
+}
+
+/* Dynamické pozice podle nastavení z ox_lib */
+#player-hud {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: all 0.5s ease; /* Plynulý posun, když hráč nasedne do auta */
+}
+
+/* Protože je logo natvrdo vpravo nahoře, posunuli jsme 'top-right' menu o trochu níž (na 100px) */
+#player-hud.top-right { top: 100px; right: 20px; align-items: flex-end; }
+#player-hud.top-left { top: 20px; left: 20px; align-items: flex-start; }
+#player-hud.bottom-right { bottom: 20px; right: 20px; align-items: flex-end; }
+#player-hud.bottom-left { bottom: 20px; left: 20px; align-items: flex-start; }
+
+/* POSUN MIO MINIMAPU KDYŽ JE HRÁČ V AUTĚ A MÁ HUD VLEVO DOLE */
+#player-hud.bottom-left.in-vehicle {
+    left: 420px; /* Hodnota 350px by měla krásně minout minimapu. Pokud by kryla, zvětši/zmenši číslo. */
+}
+
+/* Voice & Mikrofon */
+#voice-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+#mic-icon {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.4);
+    transition: color 0.2s, text-shadow 0.2s;
+}
+
+.voice-dots { display: flex; gap: 5px; }
+.voice-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+.voice-dot.active { background-color: white; }
+
+/* OPRAVA: CSS chytře aplikuje zelenou barvu na mikrofon A POUZE na aktivní tečky, 
+   pokud má rodič třídu .is-talking */
+#voice-container.is-talking #mic-icon {
+    color: #5f84ff;
+    text-shadow: 0 0 10px #5f84ff;
+}
+#voice-container.is-talking .voice-dot.active {
+    background-color: #5f84ff;
+    box-shadow: 0 0 10px #5f84ff;
+}
+
+/* Kruhové Status bary horizontálně */
+.status-bars {
+    display: flex;
+    flex-direction: row; 
+    gap: 12px;
+}
+.status-circle {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.circle-svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    transform: rotate(-90deg);
+}
+.circle-bg {
+    fill: rgba(0, 0, 0, 0.6);
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 3;
+}
+.circle-fill {
+    fill: none;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 0; 
+    transition: stroke-dashoffset 0.3s ease;
+}
+.status-icon {
+    font-size: 16px;
+    z-index: 10;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Barvy čar a ikonek v kruzích */
+.hp-color { stroke: #e74c3c; } .hp-icon { color: #e74c3c; }
+.armor-color { stroke: #3498db; } .armor-icon { color: #3498db; }
+.stamina-color { stroke: #2ecc71; } .stamina-icon { color: #2ecc71; }
+.hunger-color { stroke: #f1c40f; } .hunger-icon { color: #f1c40f; }
+.thirst-color { stroke: #00a8ff; } .thirst-icon { color: #00a8ff; }
+.stress-color { stroke: #9b59b6; } .stress-icon { color: #9b59b6; }
+.alcohol-color { stroke: #e67e22; } .alcohol-icon { color: #e67e22; }
+.drug-color { stroke: #1abc9c; } .drug-icon { color: #1abc9c; }
+
+
+/* Efekt varování při malém HP */
+#low-hp-vignette {
+    position: absolute; width: 100%; height: 100%;
+    box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.8);
+    animation: pulse 1s infinite alternate; z-index: 100; pointer-events: none;
+}
+@keyframes pulse { 0% { opacity: 0.3; } 100% { opacity: 1; } }
+
+/* CarHUD */
+
+#car-hud {
+    position: absolute; bottom: 30px; right: 30px;
+  /*  background: rgba(225, 17, 17, 0.6); padding: 15px; */
+   /* border-radius: 10px; text-align: right; */
+}
+
+#compass-street {
+    position: fixed; /* Obejde rodiče a ukotví se přímo k obrazovce */
+    bottom: 310px;   /* Výška nad minimapou */
+    left: 40px;      /* Pozice od levého okraje obrazovky */
+    
+    text-align: left;
+    font-size: 1.4rem;
+    color: #e9e9e9;
+
+}
+
+.speed-display {
+    text-align: center;
+    margin: 15px 0;
+}
+.speed-display #speed {
+    font-size: 3.5rem;
+    font-weight: bold;
+    display: inline-block;
+    line-height: 1;
+}
+.speed-display .unit {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-left: 3px;
+}
+
+.vehicle-stats {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 27px;
+
+    font-size: 1.2rem; 
+    color: rgba(255, 255, 255, 0.55); 
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    z-index: 9999;
+}
+
+/* Blinkry a indikátory asistentů */
+@keyframes flashBlinker { 
+    0%, 100% { color: rgba(255, 255, 255, 0.2); text-shadow: none; } 
+    95% { color: #1bcf27; text-shadow: 0 0 10px #1bcf27; } 
+}
+
+.indicators {
+    
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 27px;
+    
+    display: flex;
+    align-items: center;
+    gap: 35px; /* Zvětšená mezera mezi blinkry a prostředkem */
+    z-index: 9999;
+}
+
+.indicators .arrow { 
+    color: rgba(255, 255, 255, 0.55); 
+    font-size: 1.5rem; 
+}
+.indicators .arrow.active { 
+    animation: flashBlinker 0.5s infinite; 
+}
+
+.assist-indicators {
+    display: flex;
+    gap: 300px;
+}
+
+#speed-limiter, #cruise-control { 
+    font-size: 1.5rem; 
+    color: rgba(255, 255, 255, 0.55); 
+    transition: color 0.3s, text-shadow 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Tempomat (zelený) */
+#cruise-control.active { 
+    color: #237a47; 
+    text-shadow: 0 0 10px #237a47;
+}
+
+/* Omezovač (modrý) */
+#speed-limiter.active { 
+    color: #1a5984; 
+    text-shadow: 0 0 10px #1a5984;
+
+}

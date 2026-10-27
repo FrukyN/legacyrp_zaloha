@@ -1,0 +1,50 @@
+{
+  "invalid_model": "Invalid model",
+  "action_deny": "You may not perform this action",
+  "keybinds": {
+    "select": "Selects the currently highlighted gizmo",
+    "mode_translate": "Sets mode of the gizmo to translation",
+    "mode_rotate": "Sets mode for the gizmo to rotation",
+    "space_toggle": "Gizmo space (local/global) toggle",
+    "snap": "Snap current gizmo object to floor/surface",
+    "throw": "Randomly throw the gizmo object",
+    "delete": "Delete selected object"
+  },
+  "ui": {
+    "none": "None",
+    "custom": "Custom",
+    "enter_model_name": "Enter model name",
+    "spawn": "Spawn",
+    "cancel": "Cancel",
+    "everything": "Everything",
+    "search_placeholder": "Search items...",
+    "nearby": "Nearby objects",
+    "no_nearby": "No nearby objects",
+    "keybinds": {
+      "select": "Select entity",
+      "rmb": "RMB",
+      "translate": "Translate",
+      "rotate": "Rotate",
+      "put_on_ground": "Put on ground",
+      "apply_physics": "Apply physics",
+      "gizmo_space": "Local/Global Gizmo",
+      "delete": "Delete",
+      "duplicate": "Duplicate",
+      "move": "Move"
+    },
+    "options": {
+      "position": "Position",
+      "rotation": "Rotation",
+      "other": "Other",
+      "render_dist": "Render distance",
+      "texture_var": "Texture variation",
+      "render_options": {
+        "40": "Very short (40)",
+        "100": "Short (100)",
+        "200": "Medium (200)",
+        "300": "High (300)",
+        "600": "Very high (600)"
+      }
+    }
+  }
+}

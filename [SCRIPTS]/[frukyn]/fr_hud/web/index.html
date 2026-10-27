@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <title>FR HUD</title>
+</head>
+<body>
+    <!-- Filmové černé pruhy (nahoře a dole) -->
+    <div id="cinematic-top" class="cinematic-bar"></div>
+    <div id="cinematic-bottom" class="cinematic-bar"></div>
+
+    <div id="low-hp-vignette" class="hidden"></div>
+
+    <div id="hud-container">
+        <!-- Pevné logo vpravo nahoře -->
+        <img src="assets/logo.png" id="server-logo" alt="Logo">
+        
+        <!-- ZÁKLADNÍ HUD (Kruhový design) - Výchozí třída: top-right -->
+        <div id="player-hud" class="top-right">
+            <div id="voice-container">
+                <i class="fa-solid fa-microphone" id="mic-icon"></i>
+                <div class="voice-dots">
+                    <div class="voice-dot" id="dot-1"></div>
+                    <div class="voice-dot" id="dot-2"></div>
+                    <div class="voice-dot" id="dot-3"></div>
+                </div>
+            </div>
+
+            <!-- Kulaté Status bary horizontálně -->
+            <div class="status-bars">
+                <!-- Zdraví -->
+                <div class="status-circle" id="wrapper-health">
+                    <svg viewBox="0 0 40 40" class="circle-svg">
+                        <circle class="circle-bg" cx="20" cy="20" r="16" />
+                        <circle class="circle-fill hp-color" id="circle-health" cx="20" cy="20" r="16" pathLength="100" />
+                    </svg>
+                    <i class="fa-solid fa-heart status-icon hp-icon"></i>
+                </div>
+                
+                <!-- Brnění -->
+                <div class="status-circle" id="wrapper-armor">
+                    <svg viewBox="0 0 40 40" class="circle-svg">
+                        <circle class="circle-bg" cx="20" cy="20" r="16" />
+                        <circle class="circle-fill armor-color" id="circle-armor" cx="20" cy="20" r="16" pathLength="100" />
+                    </svg>
+                    <i class="fa-solid fa-shield-halved status-icon armor-icon"></i>
+                </div>
+                
+                <!-- Stamina -->
+                <div class="status-circle" id="wrapper-stamina">
+                    <svg viewBox="0 0 40 40" class="circle-svg">
+                        <circle class="circle-bg" cx="20" cy="20" r="16" />
+                        <circle class="circle-fill stamina-color" id="circle-stamina" cx="20" cy="20" r="16" pathLength="100" />
+                    </svg>
+                    <i class="fa-solid fa-person-running status-icon stamina-icon"></i>
+                </div>
+                
+                <!-- Hlad -->
+                <div class="status-circle" id="wrapper-hunger">
+                    <svg viewBox="0 0 40 40" class="circle-svg">
+                        <circle class="circle-bg" cx="20" cy="20" r="16" />
+                        <circle class="circle-fill hunger-color" id="circle-hunger" cx="20" cy="20" r="16" pathLength="100" />
+                    </svg>
+                    <i class="fa-solid fa-burger status-icon hunger-icon"></i>
+                </div>
+                
+                <!-- Žízeň -->
+                <div class="status-circle" id="wrapper-thirst">
+                    <svg viewBox="0 0 40 40" class="circle-svg">
+                        <circle class="circle-bg" cx="20" cy="20" r="16" />
+                        <circle class="circle-fill thirst-color" id="circle-thirst" cx="20" cy="20" r="16" pathLength="100" />
+                    </svg>
+                    <i class="fa-solid fa-droplet status-icon thirst-icon"></i>
+                </div>
+                
+                <!-- Stres -->
+                <div class="status-circle" id="wrapper-stress">
+                    <svg viewBox="0 0 40 40" class="circle-svg">
+                        <circle class="circle-bg" cx="20" cy="20" r="16" />
+                        <circle class="circle-fill stress-color" id="circle-stress" cx="20" cy="20" r="16" pathLength="100" />
+                    </svg>
+                    <i class="fa-solid fa-brain status-icon stress-icon"></i>
+                </div>
+
+                <!-- Alkohol -->
+                <div class="status-circle" id="wrapper-alcohol">
+                    <svg viewBox="0 0 40 40" class="circle-svg">
+                        <circle class="circle-bg" cx="20" cy="20" r="16" />
+                        <circle class="circle-fill alcohol-color" id="circle-alcohol" cx="20" cy="20" r="16" pathLength="100" />
+                    </svg>
+                    <i class="fa-solid fa-beer-mug-empty status-icon alcohol-icon"></i>
+                </div>
+
+                <!-- Drogy -->
+                <div class="status-circle" id="wrapper-drug">
+                    <svg viewBox="0 0 40 40" class="circle-svg">
+                        <circle class="circle-bg" cx="20" cy="20" r="16" />
+                        <circle class="circle-fill drug-color" id="circle-drug" cx="20" cy="20" r="16" pathLength="100" />
+                    </svg>
+                    <i class="fa-solid fa-cannabis status-icon drug-icon"></i>
+                </div>
+            </div>
+        </div>
+
+<!-- CAR HUD -->
+ 
+        <div id="car-hud" class="hidden">
+            <div class="car-info">
+                <div id="compass-street">
+                    <span id="compass">S</span> | <span id="street">Vinewood Blvd</span>
+                </div>
+                
+                <!-- Zjednodušený tachometr bez otáček -->
+                <div class="speed-display">
+                    <span id="speed">0</span>
+                    <span class="unit">MPH</span>
+                </div>
+
+                <div class="vehicle-stats">
+                    <span></span><i class="fa-solid fa-equals"></i> <span id="gear">N</span></span> 
+                    <span><i class="fa-solid fa-gas-pump">  </i>  <span id="fuel">  100</span>%</span>
+                </div>
+                
+<div class="indicators">
+                    <!-- Levý blinkr -->
+                    <i id="indicator-left" class="fa-solid fa-arrow-left arrow"></i>
+                    
+                    <div class="assist-indicators">
+                        <!-- Omezovač (Budík a text) -->
+                        <span id="speed-limiter">
+                            <i class="fa-solid fa-gauge-simple"></i>
+                        </span>
+                        
+                        <!-- Tempomat (Rychlý budík a text) -->
+                        <span id="cruise-control">
+                            <i class="fa-solid fa-gauge-high"></i>
+                        </span>
+                    </div>
+                    
+                    <!-- Pravý blinkr -->
+                    <i id="indicator-right" class="fa-solid fa-arrow-right arrow"></i>
+                </div>
+            </div>
+        </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

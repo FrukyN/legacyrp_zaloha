@@ -1,0 +1,333 @@
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+
+:root {
+    --bg: #0a0c12d1; /* pozadí hlavní */
+    --card: #0c0f1cc2; /* karta main barva */
+    --card2: #14133bd9;  /* kdyz je karta v karte */
+    --text-muted: #9aa5b1; 
+    --text: #edf3ff; 
+    --line: #a5b2cf40; /* Barva mřížky pozadí */
+    --accent: #5f84ff; /* male texty */
+    --danger: #ff6b6b; 
+    --border: #a5b2cf40; 
+    --tlacitkaokra: #2e67a1; 
+    --tlacitkatext: #eaeaea; 
+    --tlacitkobackground: rgba(139, 245, 255, 0.15); 
+    --tlacitkaokra2: #a5b2cf40; 
+    --tlacitkatext2: #edf3ff; 
+    --tlacitkobackground2: rgba(255, 255, 255, 0.04);
+    --tlacitkaokradanger: #ff6b6b66; 
+    --tlacitkatextdanger: #edf3ff; 
+    --tlacitkobackgrounddanger: #ff6b6b26; 
+    /* Zjemněný stín, aby nedělal vizuální chyby ve FiveM */
+    --shadow: -5px 0px 15px rgba(0, 0, 0, 0.4); 
+}
+
+.bg-grid {
+    position: absolute; 
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 44px 44px;
+    opacity: 0.16;
+    z-index: 1; 
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    font-family: "Chakra Petch";
+    background: transparent;
+    color: var(--text);
+    overflow: hidden; /* Zabrání posunu celé stránky */
+}
+
+body {
+    display: block;
+}
+
+#app {
+    position: absolute;
+    right: 0; /* Přilepí UI k pravému okraji */
+    top: 0;
+    width: 440px; /* Fixní šířka pro postranní panel */
+    height: 100vh; /* Roztáhne se přes celou výšku */
+    
+    background: radial-gradient(1200px 600px at 100% -10%, #12202c 0%, transparent 60%),
+    radial-gradient(900px 520px at -10% 110%, #12202c 0%, transparent 58%),
+    linear-gradient(180deg, #131313, #06080f);
+    
+    border-left: 1px solid var(--border); /* Rámeček jen na levé straně */
+    box-shadow: var(--shadow);
+    border-radius: 24px 0 0 24px; /* Zaoblení jen pro rohy směřující do středu obrazovky */
+    z-index: 10;
+}
+
+/* Oprava schovávání panelu */
+#app.hidden {
+    display: none !important;
+}
+
+.panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 32px 24px;
+    overflow-y: auto;
+}
+
+/* Úprava scrolovátka */
+.panel::-webkit-scrollbar { width: 6px; }
+.panel::-webkit-scrollbar-track { background: transparent; }
+.panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+.panel::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-shrink: 0;
+}
+
+.eyebrow {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--accent);
+    letter-spacing: 0.14em;
+    margin-bottom: 6px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 30px;
+}
+
+.ghost {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    padding: 10px 14px;
+    cursor: pointer;
+}
+
+.origin-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+.origin-btn {
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 12px 16px;
+    flex: 1;
+    text-align: left;
+    cursor: pointer;
+}
+
+.origin-btn.active {
+    border-color: var(--accent);
+    background: var(--card);
+}
+
+.origin-btn small {
+    display: block;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    flex: 1;
+}
+
+.character-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.character-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    display: flex; 
+    align-items: center; 
+    gap: 16px;
+}
+
+.character-card:hover {
+    transform: translateX(-4px);
+    border-color: var(--accent);
+}
+
+.character-card.selected {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.character-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.character-info-wrapper {
+    flex: 1;
+}
+
+.character-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.meta {
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.detail-panel {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px;
+    margin-top: auto;
+}
+
+.detail-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.field input,
+.field select {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    height: 42px;
+    padding: 0 12px;
+    color: var(--text);
+    font: inherit;
+    width: 100%;
+}
+
+.field input:focus,
+.field select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.detail-block {
+    display: grid;
+    gap: 14px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.detail-row span:first-child {
+    color: var(--text-muted);
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: 0;
+    cursor: pointer;
+    color: var(--text);
+    font-weight: 600;
+    text-align: center;
+}
+
+.action-btn.primary {
+    border: 1px solid var(--tlacitkaokra);
+    color: var(--tlacitkatext);
+    background: var(--tlacitkobackground);
+    transition: opacity 0.2s ease, background 0.2s;
+}
+
+.action-btn.primary:hover { background: rgba(139, 245, 255, 0.25); }
+
+.action-btn.danger {
+    border: 1px solid var(--tlacitkaokradanger);
+    color:var(--tlacitkatextdanger);
+    background: var(--tlacitkobackgrounddanger);
+    transition: opacity 0.2s ease, background 0.2s;
+}
+
+.action-btn.danger:hover { background: #ff6b6b40; }
+
+.new-character {
+    position: relative;
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px dashed var(--accent);
+    background: rgba(124, 156, 255, 0.08);
+    color: var(--text);
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: background 0.2s;
+}
+
+.new-character:hover {
+    background: rgba(124, 156, 255, 0.15);
+}
+#app.hidden {
+    display: none !important;
+}

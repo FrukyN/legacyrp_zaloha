@@ -1,0 +1,82 @@
+{
+  "id": "2026-10-21T19-10-45",
+  "createdAt": "2026-10-21T19:10:45.742Z",
+  "summary": {
+    "removed": 0,
+    "moved": 0,
+    "buried": 0,
+    "clipped": 0,
+    "collision": 0,
+    "filedMoves": 0,
+    "merged": 0,
+    "assets": 1,
+    "files": 1,
+    "errors": 0
+  },
+  "moves": [
+    {
+      "from": "C:/Users/pc/Desktop/txData/ox_core_0854EF.base/resources/[SCRIPTS]/[frukyn]/[prostredi]/czech_prostredi/stream/nl_removedjumps/hi@hei_dt1_20_0.ybn",
+      "fromResource": "czech_prostredi",
+      "relPath": "stream/nl_removedjumps/hi@hei_dt1_20_0.ybn",
+      "to": "czech_prostredi/stream/nl_removedjumps/hi@hei_dt1_20_0.ybn",
+      "sha1": "f822fb1385724dd36d03260b95e51950616ffa3d",
+      "size": 315671,
+      "kind": "move"
+    }
+  ],
+  "decisionsSnapshot": {
+    "version": 1,
+    "updatedAt": "2026-10-21T19:10:43.977Z",
+    "entities": [],
+    "assets": [
+      {
+        "id": "d_mvihl6z6_1",
+        "conflictId": "c_coll_21",
+        "action": "disable",
+        "file": "hei_dt1_20_0.ybn",
+        "loser": {
+          "resource": "czech_prostredi",
+          "relPath": "stream/nl_removedjumps/hei_dt1_20_0.ybn",
+          "sha1": "ff510e895fea5da5f7e9896537e21c5147835d49"
+        },
+        "winner": {
+          "sha1": "73d27b25041c5655e4f3c544e3e90ca6651e2f72",
+          "resource": "czech_prostredi"
+        },
+        "entity": null,
+        "box": null,
+        "ybn": null,
+        "ymapMove": null,
+        "merge": null,
+        "state": "applied",
+        "bundleId": "2026-10-21T19-10-05",
+        "createdAt": "2026-10-21T19:09:55.986Z",
+        "by": "FrukyN"
+      },
+      {
+        "id": "d_mvihm809_2",
+        "conflictId": "c_coll_22",
+        "action": "disable",
+        "file": "hi@hei_dt1_20_0.ybn",
+        "loser": {
+          "resource": "czech_prostredi",
+          "relPath": "stream/nl_removedjumps/hi@hei_dt1_20_0.ybn",
+          "sha1": "f822fb1385724dd36d03260b95e51950616ffa3d"
+        },
+        "winner": {
+          "sha1": "f9e8a629c97377ff32bfafcb55b1948d952a5d48",
+          "resource": "czech_prostredi"
+        },
+        "entity": null,
+        "box": null,
+        "ybn": null,
+        "ymapMove": null,
+        "merge": null,
+        "state": "applied",
+        "bundleId": "2026-10-21T19-10-45",
+        "createdAt": "2026-10-21T19:10:43.977Z",
+        "by": "FrukyN"
+      }
+    ]
+  }
+}

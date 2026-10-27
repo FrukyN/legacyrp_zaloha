@@ -1,0 +1,50 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden
+}
+
+.seatbelt-indicator {
+    position: fixed;
+    top: var(--hud-top, 50%);
+    right: var(--hud-right, 5%);
+    transform: translateY(-50%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .5s;
+    display: flex;
+    align-items: center;
+    justify-content: center
+}
+
+.seatbelt-indicator.show {
+    opacity: 1;
+    display: flex;
+    animation: pulse 1.4s ease-in-out infinite
+}
+
+.seatbelt-indicator img {
+    width: var(--hud-width, 120px);
+    height: var(--hud-height, 120px);
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 0 20px #000)
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: .5
+    }
+
+    50% {
+        opacity: 1
+    }
+}

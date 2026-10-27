@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading Screen</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <div id="app">
+        <div class="panel">
+            <div class="header">
+                <div>
+                    <div class="eyebrow">LEGACY ROLEPLAY</div>
+                    <h1>Vítejte na serveru</h1>
+                </div>
+            </div>
+            
+            <div class="content" style="display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                <div class="spinner"></div>
+                <h2 style="color: var(--accent);">Připravujeme herní data</h2>
+            </div>
+
+            <div class="music-player">
+                <!-- Skrytý SoundCloud iframe (CSS ho skryje pomocí starého ID) -->
+                <iframe id="yt-placeholder" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1960280375&auto_play=false&visual=false"></iframe>
+                
+                <div class="song-info">
+                    <div class="eyebrow">Nyní hraje ze SoundCloud</div>
+                    <div id="song-title" class="character-name">Načítání API...</div>
+                </div>
+
+                <div class="actions" style="margin-top: 0; align-items: center;">
+                    <button id="btn-prev" class="ghost" title="Předchozí skladba"><i class="fa-solid fa-backward-step"></i></button>
+                    <button id="btn-voldown" class="ghost" title="Zeslabit hudbu"><i class="fa-solid fa-minus"></i></button>
+                    <button id="btn-playpause" class="action-btn primary">Pozastavit</button>
+                    <button id="btn-volup" class="ghost" title="Zesílit hudbu"><i class="fa-solid fa-plus"></i></button>
+                    <button id="btn-next" class="ghost" title="Další skladba"><i class="fa-solid fa-forward-step"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SoundCloud API místo YouTube -->
+    <script src="https://w.soundcloud.com/player/api.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
