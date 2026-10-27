@@ -1,0 +1,103 @@
+{
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "type": "AdaptiveCard",
+    "version": "1.3",
+    "body": [
+        {
+            "type": "Container",
+            "items": [
+                {
+                    "type": "TextBlock",
+                    "text": "SYSTÉM FRONTY",
+                    "color": "Accent",
+                    "weight": "Bolder",
+                    "size": "ExtraLarge",
+                    "spacing": "None"
+                },
+                {
+                    "type": "TextBlock",
+                    "text": "{SUBTITLE}",
+                    "isSubtle": true,
+                    "size": "Small",
+                    "spacing": "None"
+                }
+            ]
+        },
+        {
+            "type": "Container",
+            "separator": true,
+            "spacing": "Medium",
+            "items": [
+                {
+                    "type": "ColumnSet",
+                    "columns": [
+                        {
+                            "type": "Column",
+                            "width": "stretch",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": "👥 Hráči online:",
+                                    "weight": "Bolder",
+                                    "size": "Medium"
+                                },
+                                {
+                                    "type": "TextBlock",
+                                    "text": "{ONLINE_PLAYERS} / {MAX_CLIENTS}",
+                                    "isSubtle": true,
+                                    "spacing": "None"
+                                },
+                                {
+                                    "type": "TextBlock",
+                                    "text": "{TIME_LABEL}",
+                                    "weight": "Bolder",
+                                    "size": "Medium",
+                                    "spacing": "Medium"
+                                },
+                                {
+                                    "type": "TextBlock",
+                                    "text": "{TIME_VALUE}",
+                                    "color": "Accent",
+                                    "weight": "Bolder",
+                                    "spacing": "None"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Column",
+                            "width": "stretch",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": "⭐ Počet bodů:",
+                                    "weight": "Bolder",
+                                    "size": "Medium"
+                                },
+                                {
+                                    "type": "TextBlock",
+                                    "text": "{POCET_BODU}",
+                                    "isSubtle": true,
+                                    "spacing": "None"
+                                },
+                                {
+                                    "type": "TextBlock",
+                                    "text": "🚶 Pozice ve frontě:",
+                                    "weight": "Bolder",
+                                    "size": "Medium",
+                                    "spacing": "Medium"
+                                },
+                                {
+                                    "type": "TextBlock",
+                                    "text": "{FRONT_COUNT}",
+                                    "isSubtle": true,
+                                    "spacing": "None"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "actions": []
+}
