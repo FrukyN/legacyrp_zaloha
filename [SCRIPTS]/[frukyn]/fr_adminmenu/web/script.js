@@ -5,6 +5,12 @@ let menuOpen = false;
 
 const IN_GAME = typeof GetParentResourceName === 'function';
 
+// Stav aktuálního řazení tabulky hráčů
+let currentSort = {
+    col: 'lastseen',
+    ascending: false
+};
+
 // --- KOMUNIKACE S LUA (NUI) ---
 function sendNUI(action, payload = {}) {
     if (!IN_GAME) {
@@ -39,7 +45,7 @@ function closeNUI() {
     sendNUI('closeMenu');
 }
 
-// --- OZNÁMENÍ: celé je to ox_lib (lib.notify) na straně Lua ---
+// --- OZNÁMENÍ: ox_lib na straně Lua ---
 const NOTIFY_TYPES = { default: 'inform', success: 'success', danger: 'error', warning: 'warning' };
 function notify(message, type = 'default', duration) {
     if (!IN_GAME) {
@@ -49,7 +55,7 @@ function notify(message, type = 'default', duration) {
     sendNUI('notify', { message, type: NOTIFY_TYPES[type] || 'inform', duration });
 }
 
-// --- DIALOGY (náhrada za confirm()/prompt(), které ve FiveM CEF nefungují) ---
+// --- DIALOGY (náhrada za confirm/prompt pro CEF) ---
 let dialogResolve = null;
 
 function closeDialog(result) {
@@ -83,7 +89,7 @@ function openDialog({ title, message, input = false, placeholder = '', okLabel =
 const askConfirm = (message) => openDialog({ title: 'Potvrzení', message });
 const askText = (message, placeholder = '') => openDialog({ title: 'Zadej hodnotu', message, input: true, placeholder, okLabel: 'Odeslat' });
 
-// Jednoduchý escape proti XSS při vkládání textu do innerHTML
+// Escape proti XSS
 const HTML_ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 function escapeHtml(str) {
     return String(str ?? '').replace(/[&<>"']/g, ch => HTML_ESCAPE_MAP[ch]);
@@ -145,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (warnInput) warnInput.value = '';
     };
 
-    const openPlayerModal = (playerId, playerName, isOffline = false) => {
+    window.openPlayerModal = (playerId, playerName, isOffline = false) => {
         selectedPlayerId = playerId;
         if (modalTitle) {
             modalTitle.innerText = isOffline
@@ -157,16 +163,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!isOffline) loadPlayerDetail(playerId);
     };
 
-    document.querySelectorAll('.btn-modal[data-player]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const target = e.currentTarget;
-            openPlayerModal(
-                target.getAttribute('data-player'),
-                target.getAttribute('data-name'),
-                target.getAttribute('data-offline') === 'true'
-            );
-        });
-    });
+    // Navázání akcí na statické řádky hráčů
+    bindPlayerRowEvents();
 
     if (closeModalBtn && modal) {
         closeModalBtn.addEventListener('click', () => {
@@ -192,6 +190,9 @@ document.addEventListener("DOMContentLoaded", () => {
             modal?.classList.remove('show');
         });
     }
+
+    // --- ŘAZENÍ TABULKY HRÁČŮ ---
+    initPlayerSorting();
 
     // --- SPRÁVA VOZIDLA (MODAL) ---
     let selectedVehiclePlate = null;
@@ -428,8 +429,8 @@ document.addEventListener("DOMContentLoaded", () => {
         notify('Poznámka k frakci byla uložena.', 'success');
     });
 
-    // --- OBECNÁ FUNKCE PRO VYHLEDÁVÁNÍ/FILTROVÁNÍ KARET ---
-    function setupCardFilter({ inputId, selectId, checkboxId, listId }) {
+    // --- FILTROVÁNÍ HRÁČŮ / VOZIDEL / FRAKCÍ ---
+    function setupFilter({ inputId, selectId, checkboxId, listId, itemSelector }) {
         const input = document.getElementById(inputId);
         const select = selectId ? document.getElementById(selectId) : null;
         const checkbox = checkboxId ? document.getElementById(checkboxId) : null;
@@ -441,20 +442,21 @@ document.addEventListener("DOMContentLoaded", () => {
             const filterType = select?.value || 'none';
             const onlineOnly = checkbox?.checked || false;
 
-            list.querySelectorAll('.card').forEach(card => {
-                const text = card.innerText.toLowerCase();
+            list.querySelectorAll(itemSelector).forEach(item => {
+                const text = item.innerText.toLowerCase();
                 let visible = !filterText || text.includes(filterText);
 
                 if (visible && filterType !== 'none') {
-                    visible = card.getAttribute('data-filter-' + filterType) === 'true'
+                    visible = item.getAttribute('data-filter-' + filterType) === 'true'
                         || text.includes(filterType);
                 }
 
                 if (visible && onlineOnly) {
-                    visible = !text.includes('[offline]') && !text.includes('offline');
+                    const status = (item.getAttribute('data-status') || '').toLowerCase();
+                    visible = status === 'online' || (!text.includes('[offline]') && !text.includes('offline'));
                 }
 
-                card.style.display = visible ? '' : 'none';
+                item.style.display = visible ? '' : 'none';
             });
         };
 
@@ -463,12 +465,12 @@ document.addEventListener("DOMContentLoaded", () => {
         checkbox?.addEventListener('change', applyFilter);
     }
 
-    setupCardFilter({ inputId: 'playerSearchInput', selectId: 'playerSearchType', checkboxId: 'searchOffline', listId: 'playerList' });
-    setupCardFilter({ inputId: 'vehicleSearchInput', selectId: 'vehicleSearchType', listId: 'vehicleList' });
-    setupCardFilter({ inputId: 'frakceSearchInput', selectId: 'frakceSearchType', listId: 'frakceList' });
+    // Propojení filtru pro hráče (tabulkové řádky) a karty
+    setupFilter({ inputId: 'playerSearchInput', selectId: 'playerSearchType', checkboxId: 'searchOffline', listId: 'playerList', itemSelector: 'tr.player-row' });
+    setupFilter({ inputId: 'vehicleSearchInput', selectId: 'vehicleSearchType', listId: 'vehicleList', itemSelector: '.card' });
+    setupFilter({ inputId: 'frakceSearchInput', selectId: 'frakceSearchType', listId: 'frakceList', itemSelector: '.card' });
 
-    // --- RYCHLÉ AKCE A NÁSTROJE (S POTVRZENÍM U NEBEZPEČNÝCH AKCÍ) ---
-    // Akce, které mají vlastní handler (potvrzení si řeší samy).
+    // --- RYCHLÉ AKCE A NÁSTROJE ---
     const HANDLED_ELSEWHERE = new Set([
         'approveWhitelist', 'rejectWhitelist', 'closeReport', 'openReportChat',
         'removeAdmin', 'sendAnnouncement', 'unbanPlayer', 'clearWarn', 'editban',
@@ -495,7 +497,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (ok && ['toggleNoclip', 'toggleGodmode', 'toggleInvis'].includes(actionType)) {
             target.classList.toggle('active');
         }
-        // Výsledek akce oznamuje server přes ox_lib
     }
 
     const bindGeneric = (btn) => btn.addEventListener('click', handleGenericAction);
@@ -517,7 +518,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const warnCheckboxes = plannedRestartModal ? plannedRestartModal.querySelectorAll('[data-warn-min]') : [];
 
     let scheduledRestartAt = null;
-    let scheduledWarnedMinutes = new Set();
     let restartCountdownInterval = null;
 
     const formatClock = (date) => date.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
@@ -570,7 +570,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function resetScheduledRestartUI() {
         scheduledRestartAt = null;
-        scheduledWarnedMinutes = new Set();
         stopRestartCountdown();
         plannedRestartActiveBox?.classList.add('hidden');
         if (btnPlannedrestart) btnPlannedrestart.innerText = 'Naplánovat restart';
@@ -627,7 +626,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!await askConfirm(`Naplánovat restart serveru na ${formatClock(target)}?`)) return;
 
         scheduledRestartAt = target;
-        scheduledWarnedMinutes = new Set();
 
         if (!await act({
             action: 'scheduleRestart',
@@ -916,7 +914,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- KLIKNUTÍ NA BLIP NA MAPĚ ---
     document.querySelectorAll('.map-blip[data-player]').forEach(blip => {
         blip.addEventListener('click', () => {
-            openPlayerModal(blip.getAttribute('data-player'), blip.getAttribute('data-name'));
+            window.openPlayerModal(blip.getAttribute('data-player'), blip.getAttribute('data-name'));
         });
     });
 
@@ -1312,14 +1310,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // =====================================================================
-    //  DATA ZE SERVERU (hráči, bany, varování, reporty, admini, dashboard)
+    //  DATA ZE SERVERU & VYKRESLOVÁNÍ
     // =====================================================================
     const setText = (id, value) => {
         const el = document.getElementById(id);
         if (el && value !== undefined && value !== null) el.innerText = value;
     };
 
-    // Která záložka vyžaduje které oprávnění (klíče odpovídají config.lua / ACL modalu)
     const TAB_PERMISSIONS = {
         players: 'players', bans: 'ban', vozidla: 'vehicles', frakce: 'server', economy: 'economy',
         whitelist: 'whitelist', tools: 'use', map: 'players', reports: 'use', chat: 'use',
@@ -1355,7 +1352,6 @@ document.addEventListener("DOMContentLoaded", () => {
         setText('statActiveWarns', d.activeWarns);
         setText('statBans24h', d.bans24h);
 
-        // Naplánovaný restart – server posílá zbývající sekundy (nezávislé na hodinách klienta)
         if (d.restartIn !== undefined && d.restartIn !== null) {
             scheduledRestartAt = new Date(Date.now() + d.restartIn * 1000);
             activateScheduledRestartUI();
@@ -1364,35 +1360,169 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // Navázání kliknutí na řádky hráčů (otevření modalu)
+    function bindPlayerRowEvents(scope = document) {
+        scope.querySelectorAll('#playerList .player-row').forEach(row => {
+            row.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return;
+                const id = row.getAttribute('data-player');
+                const name = row.getAttribute('data-name');
+                const isOffline = row.getAttribute('data-status') === 'offline';
+                window.openPlayerModal(id, name, isOffline);
+            });
+        });
+
+        scope.querySelectorAll('.btn-modal[data-player]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const target = e.currentTarget;
+                window.openPlayerModal(
+                    target.getAttribute('data-player'),
+                    target.getAttribute('data-name'),
+                    target.getAttribute('data-offline') === 'true'
+                );
+            });
+        });
+    }
+
+    // Inicializace klikacího řazení sloupců
+    function initPlayerSorting() {
+        const table = document.querySelector('.player-table');
+        if (!table) return;
+
+        const headers = table.querySelectorAll('.sortable-th');
+        headers.forEach(th => {
+            th.addEventListener('click', () => {
+                const sortType = th.getAttribute('data-sort');
+                if (!sortType) return;
+
+                if (currentSort.col === sortType) {
+                    currentSort.ascending = !currentSort.ascending;
+                } else {
+                    currentSort.col = sortType;
+                    currentSort.ascending = (sortType === 'name');
+                }
+
+                headers.forEach(h => {
+                    h.classList.remove('active-sort');
+                    const arrow = h.querySelector('.sort-arrow');
+                    if (arrow) arrow.textContent = '⇅';
+                });
+
+                th.classList.add('active-sort');
+                const activeArrow = th.querySelector('.sort-arrow');
+                if (activeArrow) {
+                    activeArrow.textContent = currentSort.ascending ? '↑' : '↓';
+                }
+
+                sortPlayerTable(sortType, currentSort.ascending);
+            });
+        });
+    }
+
+    function sortPlayerTable(sortType, ascending) {
+        const tbody = document.getElementById('playerList');
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll('tr.player-row'));
+        if (!rows.length) return;
+
+        rows.sort((a, b) => {
+            let valA, valB;
+            switch (sortType) {
+                case 'name':
+                    valA = (a.getAttribute('data-name') || '').toLowerCase();
+                    valB = (b.getAttribute('data-name') || '').toLowerCase();
+                    return ascending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+
+                case 'status':
+                    valA = (a.getAttribute('data-status') || '').toLowerCase();
+                    valB = (b.getAttribute('data-status') || '').toLowerCase();
+                    return ascending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+
+                case 'points':
+                case 'playtime':
+                case 'firstseen':
+                case 'lastseen':
+                    valA = parseFloat(a.getAttribute(`data-${sortType}`)) || 0;
+                    valB = parseFloat(b.getAttribute(`data-${sortType}`)) || 0;
+                    return ascending ? valA - valB : valB - valA;
+
+                default:
+                    valA = (a.getAttribute('data-name') || '').toLowerCase();
+                    valB = (b.getAttribute('data-name') || '').toLowerCase();
+                    return ascending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            }
+        });
+
+        rows.forEach(row => tbody.appendChild(row));
+    }
+
+    // Vykreslení hráčů do nového řádkového layoutu tabulky
     const playerList = document.getElementById('playerList');
     function renderPlayers(players) {
         if (!playerList) return;
         playerList.innerHTML = '';
-        if (!players.length) {
-            playerList.innerHTML = '<p class="k">Na serveru nikdo není.</p>';
+
+        if (!players || !players.length) {
+            playerList.innerHTML = '<tr><td colspan="7" class="k" style="text-align: center; padding: 2rem;">Na serveru nikdo není.</td></tr>';
             return;
         }
+
         players.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.dataset.filterAdmin = String(!!p.isAdmin);
-            card.dataset.filterWhitelist = String(!!p.whitelisted);
-            card.dataset.filterNote = String(!!p.hasNote);
-            card.dataset.filterBan = String(!!p.hasWarn);
+            const tr = document.createElement('tr');
+            tr.className = 'player-row';
+            const isOffline = !!p.isOffline || p.status === 'offline';
 
-            const lines = [
-                ['Jméno', p.charName], ['Group', p.group],
-                ['Ping', p.ping !== undefined ? `${p.ping} ms` : null],
-                ['Telefon', p.phone], ['Stavy', p.states]
-            ].filter(([, v]) => v);
+            tr.setAttribute('data-player', String(p.id));
+            tr.setAttribute('data-name', p.name || 'Neznámý');
+            tr.setAttribute('data-status', isOffline ? 'offline' : 'online');
+            tr.setAttribute('data-points', p.points || 0);
+            tr.setAttribute('data-playtime', p.playtimeMinutes || 0);
+            tr.setAttribute('data-firstseen', p.firstseenMinutes || 0);
+            tr.setAttribute('data-lastseen', p.lastseenMinutes || 0);
 
-            card.innerHTML =
-                `<h3>[${escapeHtml(p.id)}] ${escapeHtml(p.name)}</h3>` +
-                lines.map(([k, v]) => `<p>${k}: ${escapeHtml(v)}</p>`).join('') +
-                '<button class="btn btn-small btn-modal">Spravovat Hráče</button>';
-            card.querySelector('.btn-modal').addEventListener('click', () => openPlayerModal(String(p.id), p.name));
-            playerList.appendChild(card);
+            tr.setAttribute('data-filter-admin', String(!!p.isAdmin));
+            tr.setAttribute('data-filter-whitelist', String(!!p.whitelisted));
+            tr.setAttribute('data-filter-note', String(!!p.hasNote));
+            tr.setAttribute('data-filter-ban', String(!!p.hasWarn));
+            tr.setAttribute('data-filter-newbie', String(!!p.isNewbie));
+
+            const initial = (p.name || '?')[0].toUpperCase();
+            const subNameParts = [p.charName, p.group ? `(${p.group})` : null].filter(Boolean).join(' ');
+
+            tr.innerHTML = `
+                <td class="col-player">
+                    <div class="player-avatar-box">
+                        <span class="avatar-letter">${escapeHtml(initial)}</span>
+                        <span class="avatar-id ${isOffline ? 'offline-id' : ''}">${escapeHtml(isOffline ? '—' : p.id)}</span>
+                    </div>
+                    <div class="player-meta">
+                        <div class="name-with-tag">
+                            <span class="player-main-name">${escapeHtml(p.name)}</span>
+                            ${p.suspicious ? '<span class="tag-suspicious">Suspicious</span>' : ''}
+                        </div>
+                        <span class="player-sub-name">${escapeHtml(subNameParts || '–')}</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="status-pill ${isOffline ? 'status-banned' : 'status-online'}">
+                        <span class="status-dot"></span> ${isOffline ? 'Offline' : `Online | ${escapeHtml(p.id)}`}
+                    </span>
+                </td>
+                <td class="col-muted">${escapeHtml(p.playtime || '—')}</td>
+                <td class="col-points ${p.points > 0 ? 'val-highlight' : ''}">${p.points !== undefined && p.points > 0 ? escapeHtml(p.points) : '—'}</td>
+                <td class="col-muted">${escapeHtml(p.firstseen || '—')}</td>
+                <td class="col-lastseen">${escapeHtml(p.lastseen || (isOffline ? 'Offline' : 'Online'))}</td>
+                <td class="col-arrow">
+                    <button class="row-action-btn btn-modal" data-player="${escapeHtml(p.id)}" data-name="${escapeHtml(p.name)}" ${isOffline ? 'data-offline="true"' : ''} title="Spravovat">&#8250;</button>
+                </td>
+            `;
+
+            playerList.appendChild(tr);
         });
+
+        bindPlayerRowEvents(playerList);
+        sortPlayerTable(currentSort.col, currentSort.ascending);
         document.getElementById('playerSearchInput')?.dispatchEvent(new Event('keyup'));
     }
 
@@ -1510,7 +1640,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data && data.dashboard) applyData(data);
     }
 
-    // Detail hráče do modalu (identifikátory, playtime, poznámka, varování)
+    // Detail hráče do modalu
     async function loadPlayerDetail(playerId) {
         const d = await sendNUI('getPlayerDetail', { id: playerId });
         if (!d || selectedPlayerId !== playerId) return;
@@ -1539,10 +1669,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Periodické obnovování dat, dokud je menu otevřené
+    // Periodické obnovování dat ve hře
     setInterval(() => { if (menuOpen && IN_GAME) refreshData(); }, 8000);
 
-    // Chat adminů a chat k reportům přichází z Lua jako zprávy
     function appendChatLine(container, author, message) {
         if (!container) return;
         const el = document.createElement('div');

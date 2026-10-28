@@ -87,6 +87,15 @@
                     </div>
                 </div>
 
+                <div class="panel">
+                    <div class="status-grid">
+                        <div class="panel-status">
+                            <span class="k">Aktivní bany</span>
+                            <strong id="statActiveBans">5</strong>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="actions">
                     <button class="btn btn-danger" data-action="offserver"
                         data-confirm="Opravdu chceš vypnout server pro všechny hráče?">Vypnout server</button>
@@ -102,7 +111,7 @@
                 </div>
             </section>
 
-            <!-- HRÁČI -->
+<!-- HRÁČI -->
             <section id="players" class="hero reveal hidden">
                 <div class="tag js-whoami">Přihlášen jako: …</div>
                 <h1>Správa hráčů</h1>
@@ -127,48 +136,135 @@
                 <div class="panel">
                     <div class="section-row">
                         <input type="text" id="playerSearchInput" class="input-search"
-                            placeholder="userId, username, license, steam, fivem, discord"> Filter:
-                        <select id="playerSearchType" class="input-search2">
-                            <option value="none">Žádný filtr</option>
-                            <option value="admin">Je admin</option>
-                            <option value="whitelist">Má whitelist</option>
-                            <option value="note">Má o sobě poznámku</option>
-                            <option value="ban">Má ban/warn</option>
-                        </select>
+                            placeholder="userId, username, license, steam, fivem, discord">
+
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span>Filter:</span>
+                            <select id="playerSearchType" class="input-search2">
+                                <option value="none">Žádný filtr</option>
+                                <option value="admin">Je admin</option>
+                                <option value="whitelist">Má whitelist</option>
+                                <option value="note">Má o sobě poznámku</option>
+                                <option value="ban">Měl ban/warn</option>
+                                <option value="newbie">Nový hráč</option>
+                            </select>
+                        </div>
+
                         <label class="inline-checkbox">
                             <input type="checkbox" id="searchOffline">
                             <span>Zobrazit jen online hráče</span>
                         </label>
                     </div>
 
-                    <div class="cards" id="playerList">
-                        <div class="card">
-                            <h3>[15] FrukyN</h3>
-                            <p>Jméno: Karel Cigan</p>
-                            <p>Group: Police</p>
-                            <p>Telefon: 555-0142</p>
-                            <p>Stavy: Hlad: 82, Žízeň: 76, Stres: 12</p>
-                            <button class="btn btn-small btn-modal" data-player="15" data-name="FrukyN">Spravovat
-                                Hráče</button>
-                        </div>
-                        <div class="card">
-                            <h3>[8] Pavel_S</h3>
-                            <p>Jméno: Pavel Stárek</p>
-                            <p>Group: unemployed</p>
-                            <p>Telefon: 555-0198</p>
-                            <p>Stavy: Hlad: 45, Žízeň: 60, Stres: 34</p>
-                            <button class="btn btn-small btn-modal" data-player="8" data-name="Pavel_S">Spravovat
-                                Hráče</button>
-                        </div>
-                        <div class="card">
-                            <h3>[Offline] Karol01</h3>
-                            <p>Jméno: Marek Podnikatel</p>
-                            <p>Group: unemployed</p>
-                            <p>Telefon: 555-0177</p>
-                            <p>Stavy: neznámé (offline)</p>
-                            <button class="btn btn-small2 btn-modal" data-player="offline_Karol01" data-name="Karol01"
-                                data-offline="true">Offline Správa</button>
-                        </div>
+                    <!-- NOVÝ SEZNAM HRÁČŮ POD SEBOU DLE PŘEDLOHY -->
+                    <div class="player-table-container">
+                        <table class="player-table">
+                            <thead>
+                                <tr>
+                                    <th class="sortable-th" data-sort="name">
+                                        PLAYER <span class="sort-arrow">⇅</span>
+                                    </th>
+                                    <th class="sortable-th" data-sort="status">
+                                        STATUS <span class="sort-arrow">⇅</span>
+                                    </th>
+                                    <th class="sortable-th" data-sort="playtime">
+                                        PLAYTIME <span class="sort-arrow">⇅</span>
+                                    </th>
+                                    <th class="sortable-th" data-sort="points">
+                                        POINTS <span class="sort-arrow">⇅</span>
+                                    </th>
+                                    <th class="sortable-th" data-sort="firstseen">
+                                        FIRST SEEN <span class="sort-arrow">⇅</span>
+                                    </th>
+                                    <th class="sortable-th active-sort" data-sort="lastseen">
+                                        LAST SEEN <span class="sort-arrow">↓</span>
+                                    </th>
+                                    <th style="width: 32px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="playerList">
+                                <!-- Hráč 1 -->
+                                <tr class="player-row" data-player="15" data-name="FrukyN" data-status="online" data-points="0" data-playtime="41" data-firstseen="6" data-lastseen="1">
+                                    <td class="col-player">
+                                        <div class="player-avatar-box">
+                                            <span class="avatar-letter">F</span>
+                                            <span class="avatar-id">15</span>
+                                        </div>
+                                        <div class="player-meta">
+                                            <span class="player-main-name">FrukyN</span>
+                                            <span class="player-sub-name">Karel Cigan (Police)</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="status-pill status-online">
+                                            <span class="status-dot"></span> Online | 15
+                                        </span>
+                                    </td>
+                                    <td class="col-muted">1d 17h</td>
+                                    <td class="col-points">—</td>
+                                    <td class="col-muted">6 minutes ago</td>
+                                    <td class="col-lastseen">Online</td>
+                                    <td class="col-arrow">
+                                        <button class="row-action-btn btn-modal" data-player="15" data-name="FrukyN" title="Spravovat">&#8250;</button>
+                                    </td>
+                                </tr>
+
+                                <!-- Hráč 2 -->
+                                <tr class="player-row" data-player="8" data-name="Pavel_S" data-status="online" data-points="2" data-playtime="38" data-firstseen="1440" data-lastseen="2">
+                                    <td class="col-player">
+                                        <div class="player-avatar-box">
+                                            <span class="avatar-letter">P</span>
+                                            <span class="avatar-id">8</span>
+                                        </div>
+                                        <div class="player-meta">
+                                            <span class="player-main-name">Pavel_S</span>
+                                            <span class="player-sub-name">Pavel Stárek</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="status-pill status-online">
+                                            <span class="status-dot"></span> Online | 8
+                                        </span>
+                                    </td>
+                                    <td class="col-muted">1d 14h</td>
+                                    <td class="col-points val-highlight">2</td>
+                                    <td class="col-muted">yesterday</td>
+                                    <td class="col-lastseen">Online</td>
+                                    <td class="col-arrow">
+                                        <button class="row-action-btn btn-modal" data-player="8" data-name="Pavel_S" title="Spravovat">&#8250;</button>
+                                    </td>
+                                </tr>
+
+                                <!-- Hráč 3 (Offline / Podezřelý / Ban) -->
+                                <tr class="player-row" data-player="offline_Karol01" data-name="Karol01" data-status="offline" data-points="8" data-playtime="16" data-firstseen="7200" data-lastseen="7200">
+                                    <td class="col-player">
+                                        <div class="player-avatar-box">
+                                            <span class="avatar-letter">K</span>
+                                            <span class="avatar-id offline-id">—</span>
+                                        </div>
+                                        <div class="player-meta">
+                                            <div class="name-with-tag">
+                                                <span class="player-main-name">Karol01</span>
+                                                <span class="tag-suspicious">Suspicious</span>
+                                            </div>
+                                            <span class="player-sub-name">Marek Podnikatel</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="status-pill status-banned">
+                                            <span class="status-dot"></span> Offline
+                                        </span>
+                                    </td>
+                                    <td class="col-muted">16h 10m</td>
+                                    <td class="col-points val-highlight">8</td>
+                                    <td class="col-muted">5 days ago</td>
+                                    <td class="col-lastseen">5 days ago</td>
+                                    <td class="col-arrow">
+                                        <button class="row-action-btn btn-modal" data-player="offline_Karol01" data-name="Karol01" data-offline="true" title="Offline Správa">&#8250;</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>

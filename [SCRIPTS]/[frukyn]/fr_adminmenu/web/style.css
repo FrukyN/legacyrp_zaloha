@@ -200,6 +200,209 @@ h2 {
   gap: 0.9rem;
 }
 
+/* --- TABULKA HRÁČŮ PODLE PŘEDLOHY --- */
+.player-table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.player-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+/* Záhlaví tabulky */
+.player-table thead th {
+  padding: 0.85rem 1rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: #7b8595;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  user-select: none;
+}
+
+.sortable-th {
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.sortable-th:hover {
+  color: var(--text);
+}
+
+.sortable-th.active-sort {
+  color: #f59e0b; /* Žlutozlatá aktivní barva jako na screenshotu */
+}
+
+.sort-arrow {
+  margin-left: 0.35rem;
+  font-size: 0.85rem;
+  display: inline-block;
+}
+
+/* Řádky tabulky */
+.player-row {
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.035);
+}
+
+.player-row:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+.player-row td {
+  padding: 0.85rem 1rem;
+  font-size: 0.92rem;
+  vertical-align: middle;
+}
+
+/* Sloupec hráče: Avatar box a jména */
+.col-player {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.player-avatar-box {
+  width: 38px;
+  height: 38px;
+  background: #14171e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar-letter {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #c9d2de;
+}
+
+.avatar-id {
+  position: absolute;
+  bottom: 1px;
+  right: 3px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #28a745;
+  line-height: 1;
+}
+
+.avatar-id.offline-id {
+  color: #7b8595;
+}
+
+.player-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.player-main-name {
+  font-weight: 600;
+  color: #edf3ff;
+  font-size: 0.96rem;
+}
+
+.player-sub-name {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.name-with-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tag-suspicious {
+  background: rgba(255, 107, 107, 0.15);
+  border: 1px solid rgba(255, 107, 107, 0.35);
+  color: #ff6b6b;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  border-radius: 10px;
+}
+
+/* Status pills (Online / Banned / Offline) */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-online {
+  background: rgba(40, 167, 69, 0.12);
+  color: #3dd665;
+  border: 1px solid rgba(40, 167, 69, 0.25);
+}
+
+.status-banned {
+  background: rgba(255, 107, 107, 0.12);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.25);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Sloupce s textem */
+.col-muted {
+  color: #8c97a8;
+  font-size: 0.88rem;
+}
+
+.col-points {
+  color: #8c97a8;
+  font-weight: 700;
+}
+
+.col-points.val-highlight {
+  color: #f59e0b; /* Zlaté číslo bodů jako Michael Reed (2) na screenshotu */
+}
+
+.col-lastseen {
+  color: #c9d2de;
+}
+
+/* Šipka pro otevření modalu / akce */
+.row-action-btn {
+  background: transparent;
+  border: none;
+  color: #636d7d;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  line-height: 1;
+  border-radius: 4px;
+  transition: color 0.15s, transform 0.15s;
+  display: block;
+  margin: 0;
+}
+
+.player-row:hover .row-action-btn {
+  color: var(--text);
+  transform: translateX(2px);
+}
+
 .card {
   padding: 1rem;
   border-radius: 14px;
