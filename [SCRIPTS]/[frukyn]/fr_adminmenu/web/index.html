@@ -23,7 +23,6 @@
                 <a href="#" class="nav-item" data-target="economy">Ekonomika</a>
                 <a href="#" class="nav-item" data-target="whitelist">Whitelist</a>
                 <a href="#" class="nav-item" data-target="tools">Nástroje</a>
-                <a href="#" class="nav-item" data-target="map">Mapa</a>
                 <a href="#" class="nav-item" data-target="reports"><span id="reportsBadge"
                         class="text-danger">[0]</span> Reporty</a>
                 <a href="#" class="nav-item" data-target="chat">Chat</a>
@@ -83,15 +82,6 @@
                         <div class="panel-status">
                             <span class="k">Další restart</span>
                             <strong id="statNextRestart">1 hour</strong>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <div class="status-grid">
-                        <div class="panel-status">
-                            <span class="k">Aktivní bany</span>
-                            <strong id="statActiveBans">5</strong>
                         </div>
                     </div>
                 </div>
@@ -923,79 +913,7 @@
                 </div>
             </section>
 
-            <!-- MAPA -->
-            <section id="map" class="hero reveal hidden">
-                <div class="tag js-whoami">Přihlášen jako: …</div>
-                <h1>Live Mapa Hráčů</h1>
-                <p class="lead">Poloha online hráčů, adminů a otevřených reportů v reálném čase.</p>
-
-                <div class="panel">
-                    <div class="map-wrap" id="mapCanvas">
-                        <div class="map-blip player" style="top: 42%; left: 38%;" data-player="15" data-name="Jan Novák"
-                            title="[15] Jan Novák"></div>
-                        <div class="map-blip player" style="top: 61%; left: 55%;" data-player="8" data-name="Pavel S."
-                            title="[8] Pavel S."></div>
-                        <div class="map-blip player" style="top: 30%; left: 70%;" data-player="21"
-                            data-name="Martin Procházka" title="[21] Martin Procházka"></div>
-                        <div class="map-blip admin" style="top: 50%; left: 48%;" title="Admin: Karlos"></div>
-                        <div class="map-blip report" style="top: 47%; left: 40%;" title="Report #1042 - RDM"></div>
-                    </div>
-                    <div class="map-legend">
-                        <span><span class="dot player"></span> Hráč</span>
-                        <span><span class="dot admin"></span> Admin on-duty</span>
-                        <span><span class="dot report"></span> Aktivní report</span>
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <div class="section-row">
-                        <h3>Online hráči</h3>
-                        <input type="text" class="input-search" id="mapPlayerSearch"
-                            placeholder="Hledat hráče na mapě...">
-                    </div>
-                    <div class="table-container">
-                        <table class="data-table" id="mapPlayerTable">
-                            <thead>
-                                <tr>
-                                    <th>Hráč</th>
-                                    <th>Souřadnice</th>
-                                    <th>Zóna</th>
-                                    <th style="text-align: right;">Akce</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>[15] Jan Novák</strong></td>
-                                    <td><code>-215.4, -890.1, 30.2</code></td>
-                                    <td>Nemocnice Pillbox</td>
-                                    <td class="table-actions">
-                                        <button class="btn btn-small" data-action="gotoReportPlayer"
-                                            data-id="15">Přejít</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>[8] Pavel S.</strong></td>
-                                    <td><code>120.8, -1280.5, 29.0</code></td>
-                                    <td>Legion Square</td>
-                                    <td class="table-actions">
-                                        <button class="btn btn-small" data-action="gotoReportPlayer"
-                                            data-id="8">Přejít</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>[21] Martin Procházka</strong></td>
-                                    <td><code>2440.1, 4990.8, 38.0</code></td>
-                                    <td>Sandy Shores</td>
-                                    <td class="table-actions">
-                                        <button class="btn btn-small" data-action="gotoReportPlayer"
-                                            data-id="21">Přejít</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
+            
 
             <!-- REPORTY -->
             <section id="reports" class="hero reveal hidden">
