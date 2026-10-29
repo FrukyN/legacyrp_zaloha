@@ -4,7 +4,6 @@ local ReconnectTracker = {}    -- Sledování pokusů o připojení (ochrana pro
 local JoinCounter = 0          -- Monotónní počítadlo pro 100% přesné pořadí při shodě bodů
 local RawCardTemplate = nil
 
--- Načtení šablony JSONu při startu resource
 CreateThread(function()
     RawCardTemplate = LoadResourceFile(GetCurrentResourceName(), "server/karta.json")
     if not RawCardTemplate then
@@ -12,20 +11,18 @@ CreateThread(function()
     end
 end)
 
--- Pomocná funkce pro bezpečné escapování textu do JSONu (ochrana proti pádům, když má hráč v nicku uvozovky)
 local function escapeJsonString(str)
     if not str then return "" end
-    return tostring(str):gsub('\\', '\\\\'):gsub('"', '\\"'):gsub('\n', '\\n'):gsub('\r', '\\r')
+    local res = tostring(str):gsub('\\', '\\\\'):gsub('"', '\\"'):gsub('\n', '\\n'):gsub('\r', '\\r')
+    return res
 end
 
--- Formátování vteřin na MM:SS pro čekání ve frontě
 local function formatTime(seconds)
     local mins = math.floor(seconds / 60)
     local secs = seconds % 60
     return string.format("%02d:%02d", mins, secs)
 end
 
--- Získání identifikátorů hráče
 local function getIdentifiers(src)
     local ids = {}
     for _, rawId in ipairs(GetPlayerIdentifiers(src)) do
@@ -37,7 +34,6 @@ local function getIdentifiers(src)
     return ids
 end
 
--- Dotaz na Discord API – vždy čerstvé načtení rolí a sečtení (stackování) bodů
 local function fetchDiscordPriority(discordId)
     local p = promise.new()
 
@@ -80,9 +76,6 @@ local function fetchDiscordPriority(discordId)
     return Citizen.Await(p)
 end
 
--- Řazení fronty:
--- 1. Vyšší počet bodů má přednost.
--- 2. Při shodě bodů rozhoduje dřívější příchod do fronty (nižší joinOrder).
 local function sortQueue()
     table.sort(Queue, function(a, b)
         if a.points ~= b.points then
@@ -92,7 +85,6 @@ local function sortQueue()
     end)
 end
 
--- Získání pozice hráče ve frontě
 local function getQueuePosition(identifier)
     for idx, entry in ipairs(Queue) do
         if entry.identifier == identifier then
@@ -102,7 +94,6 @@ local function getQueuePosition(identifier)
     return nil
 end
 
--- Odebrání hráče z fronty
 local function removeFromQueue(identifier)
     for idx, entry in ipairs(Queue) do
         if entry.identifier == identifier then
@@ -113,7 +104,6 @@ local function removeFromQueue(identifier)
     return false
 end
 
--- Spočítání obsazených slotů (online hráči + hráči, kteří právě dostali slot a připojují se)
 local function getSlotCounts()
     local maxClients = GetConvarInt("sv_maxclients", 64)
     local reservedCfg = math.min(Config.ReservedSlots or 0, maxClients)
@@ -141,31 +131,26 @@ local function getSlotCounts()
     }
 end
 
--- Kontrola, zda je pro daného hráče volný slot
 local function canPlayerTakeSlot(isReservedPlayer)
     local counts = getSlotCounts()
     if isReservedPlayer then
-        -- Hráč s rezervovanou rolí může obsadit jakýkoliv volný slot až do sv_maxclients
         return counts.totalOccupied < counts.maxClients
     else
-        -- Běžný hráč může obsadit pouze veřejné sloty (sv_maxclients - ReservedSlots)
         return counts.totalOccupied < counts.publicMax
     end
 end
 
--- Vyhodnocení fronty: uvolnil-li se slot, posune prvního vhodného hráče do fáze "READY" (zobrazí se mu tlačítko)
 local function processQueue()
     sortQueue()
     if #Queue == 0 then return end
 
     local counts = getSlotCounts()
     if counts.totalOccupied >= counts.maxClients then
-        return -- Server je 100% plný včetně rezervovaných slotů
+        return
     end
 
     for _, entry in ipairs(Queue) do
         if canPlayerTakeSlot(entry.isReserved) then
-            -- Zamkneme slot pro tohoto hráče a přepneme ho do stavu READY
             ReservedLocks[entry.identifier] = {
                 expires = os.time() + Config.AutoConnectTimeout + Config.ConnectingLockTimeout,
                 isReserved = entry.isReserved
@@ -177,7 +162,6 @@ local function processQueue()
     end
 end
 
--- Sestavení Adaptive Card podle toho, zda hráč čeká ve frontě nebo má volný slot
 local function buildCard(state, points, queuePos, queueTotal, timeVal)
     if not RawCardTemplate then return nil end
 
@@ -204,7 +188,6 @@ local function buildCard(state, points, queuePos, queueTotal, timeVal)
 
     card.actions = {}
 
-    -- Pokud je volný slot (stav READY), zobrazíme tlačítko "Vstoupit do hry"
     if state == "READY" then
         table.insert(card.actions, {
             type = "Action.Submit",
@@ -214,7 +197,6 @@ local function buildCard(state, points, queuePos, queueTotal, timeVal)
         })
     end
 
-    -- Odkazová tlačítka
     if Config.Links.Web and Config.Links.Web ~= "" then
         table.insert(card.actions, {
             type = "Action.OpenUrl",
@@ -234,7 +216,6 @@ local function buildCard(state, points, queuePos, queueTotal, timeVal)
     return card
 end
 
--- Hlavní obsluha připojujícího se hráče
 AddEventHandler('playerConnecting', function(playerName, setKickReason, deferrals)
     local src = source
     deferrals.defer()
