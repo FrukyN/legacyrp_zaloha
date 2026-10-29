@@ -3,6 +3,12 @@ game 'gta5'
 
 lua54 'yes'
 
+dependencies {
+    'ox_lib',
+    'ox_core',
+    'ox_inventory',
+}
+
 shared_scripts {
     '@ox_lib/init.lua',
     'shared/config.lua',

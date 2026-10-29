@@ -367,6 +367,17 @@ RegisterNetEvent('fr_admin:client:do', function(name, payload)
     if handler then handler(payload or {}) end
 end)
 
+AddEventHandler('onResourceStop', function(resource)
+    if resource ~= GetCurrentResourceName() then return end
+    if noclip then stopNoclip() end
+    if godmode then setGodmode(false) end
+    if spectating then stopSpectate() end
+    if invisible then
+        invisible = false
+        SetEntityVisible(PlayerPedId(), true, false)
+    end
+end)
+
 
 RegisterCommand('fr_noclip', function()
     lib.callback.await('fr_admin:execute', false, { action = 'toggleNoclip' })

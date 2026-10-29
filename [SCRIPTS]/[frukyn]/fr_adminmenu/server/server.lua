@@ -537,6 +537,7 @@ local function buildPayload(src)
     if perms.ban then data.bans, data.warns = buildBans(), buildWarns() end
     if perms.use then data.reports = buildReports() end
     if perms.staffmanage then data.admins = buildAdmins() end
+    if perms.server then data.settings = store.settings end
     return data
 end
 
@@ -611,20 +612,6 @@ local function A(name, perm, fn, opts)
     Actions[name] = { perm = perm, fn = fn, opts = opts or {} }
 end
 
-local NOT_CONNECTED = 'Tato funkce zatím není napojená na tvůj framework (viz server/bridge.lua).'
-
--- Funkce závislé na databázi/frameworku, které nemají univerzální implementaci
-for perm, names in pairs({
-    vehicles  = { 'transferVehicleOwner', 'saveVehicleNote', 'toggleVehicleImpound' },
-    server    = { 'payFactionSalaries', 'deleteFaction', 'setFactionBalance', 'saveFactionNote', 'openFactionStash', 'openFactionGarage', 'addDosEntry' },
-    economy   = { 'editCompanyBalance', 'viewCompanyLog' },
-    whitelist = { 'approveWhitelist', 'rejectWhitelist' },
-}) do
-    for _, name in ipairs(names) do
-        A(name, perm, function() return false, NOT_CONNECTED end, { silent = true })
-    end
-end
-
 -- ── Vlastní postava (efekt běží na klientovi, oznámení hlásí klient) ──────────
 for _, name in ipairs({ 'toggleNoclip', 'toggleGodmode', 'toggleInvis' }) do
     A(name, 'use', function(src)
@@ -673,6 +660,7 @@ end)
 A('healPlayer', 'players', function(src, p)
     local target = targetId(p)
     if not target then return false, 'Hráč není online.' end
+    if not canTarget(src, target) then return false, 'Tohoto hráče nemůžeš oživit.' end
     Bridge.revive(target)
     toClient(target, 'heal')
     return true, ('Hráč %s byl oživen.'):format(GetPlayerName(target))
@@ -681,6 +669,7 @@ end, { notifyOk = true })
 local function teleportAdminTo(src, p)
     local target = targetId(p)
     if not target then return false, 'Hráč není online.' end
+    if not canTarget(src, target) then return false, 'K tomuto hráči se nemůžeš teleportovat.' end
     local c = playerCoords(target)
     toClient(src, 'teleport', { x = c.x, y = c.y, z = c.z })
     return true, ('Teleportováno k hráči %s.'):format(GetPlayerName(target))
@@ -700,6 +689,7 @@ end, { notifyOk = true })
 A('spectatePlayer', 'players', function(src, p)
     local target = targetId(p)
     if not target then return false, 'Hráč není online.' end
+    if not canTarget(src, target) then return false, 'Tohoto hráče nemůžeš sledovat.' end
     if target == src then return false, 'Sám sebe sledovat nemůžeš.' end
     local c = playerCoords(target)
     toClient(src, 'spectate', { target = target, x = c.x, y = c.y, z = c.z })
@@ -712,6 +702,7 @@ A('screenshotPlayer', 'players', function(src, p)
     end
     local target = targetId(p)
     if not target then return false, 'Hráč není online.' end
+    if not canTarget(src, target) then return false, 'Od tohoto hráče nemůžeš pořídit screenshot.' end
     exports['screenshot-basic']:requestClientScreenshot(target, { encoding = 'jpg', quality = 0.4 }, function(err, data)
         if err or not data then return notify(src, 'Screenshot se nepodařilo pořídit.', 'error') end
         TriggerClientEvent('fr_admin:client:showScreenshot', src, data, GetPlayerName(target))
@@ -727,9 +718,10 @@ A('toggleFreeze', 'players', function(src, p)
     return true
 end, { silent = true })
 
-A('forceCommand', 'players', function(_, p)
+A('forceCommand', 'players', function(src, p)
     local target = targetId(p)
     if not target then return false, 'Hráč není online.' end
+    if not canTarget(src, target) then return false, 'Na tohoto hráče nemůžeš vynutit příkaz.' end
     local command = tostring(p.command or '')
     if not Config.AllowedForceCommands[command] then
         return false,
@@ -751,9 +743,13 @@ A('saveStaffNote', 'players', function(src, p)
     local target = targetId(p)
     local license = target and getLicense(target)
     if not license then return false, 'Hráč není online.' end
+    if not canTarget(src, target) then return false, 'Poznámku k tomuto hráči nemůžeš upravit.' end
     local text = trim(p.note):sub(1, 500)
-    if text == '' then return false, 'Poznámka je prázdná.' end
-    store.notes[license] = { text = text, by = GetPlayerName(src), at = os.time() }
+    if text == '' then
+        store.notes[license] = nil
+    else
+        store.notes[license] = { text = text, by = GetPlayerName(src), at = os.time() }
+    end
     markDirty()
     return true
 end)
@@ -763,6 +759,7 @@ A('addWarn', 'ban', function(src, p)
     local target = targetId(p)
     local license = target and getLicense(target)
     if not license then return false, 'Hráč není online.' end
+    if not canTarget(src, target) then return false, 'Tomuto hráči nemůžeš udělit varování.' end
     local reason = trim(p.reason):sub(1, 200)
     if reason == '' then return false, 'Zadej důvod varování.' end
 
@@ -866,6 +863,7 @@ end, { cat = 'bans', silent = true })
 A('setPlayerMoney', 'economy', function(src, p)
     local target = targetId(p)
     if not target then return false, 'Hráč není online.' end
+    if not canTarget(src, target) then return false, 'Finance tohoto hráče nemůžeš upravit.' end
     local amount = math.floor(tonumber(p.amount) or 0)
     if amount <= 0 or amount > 1000000000 then return false, 'Neplatná částka.' end
     local account = ({ cash = 'cash', bank = 'bank', black = 'black' })[p.account]

@@ -95,6 +95,8 @@ function escapeHtml(str) {
     return String(str ?? '').replace(/[&<>"']/g, ch => HTML_ESCAPE_MAP[ch]);
 }
 
+const formatMoney = (n) => `${n < 0 ? '-' : ''}$${Math.abs(n).toLocaleString('cs-CZ')}`;
+
 // Globální handlery pro inline onclicky z HTML
 window.closeReportModal = () => document.getElementById('createReportModal')?.classList.remove('show');
 window.closeChatModal = () => document.getElementById('chatModal')?.classList.remove('show');
@@ -149,6 +151,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (noteInput) noteInput.value = '';
         const warnInput = document.getElementById('warnReasonInput');
         if (warnInput) warnInput.value = '';
+        const banReason = document.getElementById('modalBanReason');
+        if (banReason) banReason.value = '';
     };
 
     window.openPlayerModal = (playerId, playerName, isOffline = false) => {
@@ -196,6 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- SPRÁVA VOZIDLA (MODAL) ---
     let selectedVehiclePlate = null;
+    let activeVehicleTriggerBtn = null;
     const vehicleModal = document.getElementById('vehicleModal');
     const modalVehicleTitle = document.getElementById('modalVehicleTitle');
     const closeVehicleModalBtn = document.getElementById('closeVehicleModalBtn');
@@ -206,6 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnSaveVehicleNote = document.getElementById('btnSaveVehicleNote');
 
     const openVehicleModal = (btn) => {
+        activeVehicleTriggerBtn = btn;
         selectedVehiclePlate = btn.getAttribute('data-plate');
         const model = btn.getAttribute('data-model') || 'Neznámý model';
         const owner = btn.getAttribute('data-owner') || 'Neznámý majitel';
@@ -252,15 +258,17 @@ document.addEventListener("DOMContentLoaded", () => {
     closeVehicleModalBtn?.addEventListener('click', () => {
         vehicleModal?.classList.remove('show');
         selectedVehiclePlate = null;
+        activeVehicleTriggerBtn = null;
     });
 
     btnToggleVehicleLock?.addEventListener('click', async () => {
         if (!selectedVehiclePlate) return;
         const isLocked = btnToggleVehicleLock.getAttribute('data-locked') === 'true';
         const newState = !isLocked;
+        if (!await act({ action: 'toggleVehicleLock', plate: selectedVehiclePlate, locked: newState })) return;
         btnToggleVehicleLock.setAttribute('data-locked', String(newState));
         btnToggleVehicleLock.innerText = newState ? 'Odemknout dveře' : 'Zamknout dveře';
-        if (!await act({ action: 'toggleVehicleLock', plate: selectedVehiclePlate, locked: newState })) return;
+        activeVehicleTriggerBtn?.setAttribute('data-locked', String(newState));
         notify(newState ? 'Vozidlo bylo zamčeno.' : 'Vozidlo bylo odemčeno.', 'warning');
     });
 
@@ -268,9 +276,27 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!selectedVehiclePlate) return;
         const isImpounded = btnToggleImpound.getAttribute('data-impounded') === 'true';
         const newState = !isImpounded;
+        if (!await act({ action: 'toggleVehicleImpound', plate: selectedVehiclePlate, impounded: newState })) return;
         btnToggleImpound.setAttribute('data-impounded', String(newState));
         btnToggleImpound.innerText = newState ? 'Vydat z depa' : 'Zabavit do depa';
-        if (!await act({ action: 'toggleVehicleImpound', plate: selectedVehiclePlate, impounded: newState })) return;
+
+        const newStatusLabel = newState ? 'V depu' : 'V garáži';
+        document.getElementById('modalVehicleStatus').innerText = newStatusLabel;
+        if (activeVehicleTriggerBtn) {
+            activeVehicleTriggerBtn.setAttribute('data-impounded', String(newState));
+            activeVehicleTriggerBtn.setAttribute('data-status', newStatusLabel);
+            const card = activeVehicleTriggerBtn.closest('.card');
+            if (card) {
+                card.setAttribute('data-filter-impounded', String(newState));
+                card.setAttribute('data-filter-stored', String(!newState));
+                card.setAttribute('data-filter-outside', 'false');
+                const statusBadge = card.querySelector('.js-veh-status');
+                if (statusBadge) {
+                    statusBadge.innerText = newStatusLabel;
+                    statusBadge.className = `badge ${newState ? 'badge-danger' : 'badge-accent'} js-veh-status`;
+                }
+            }
+        }
         notify(newState ? 'Vozidlo bylo zabaveno do depa.' : 'Vozidlo bylo vydáno z depa.', newState ? 'danger' : 'success');
     });
 
@@ -284,6 +310,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const bodyElem = document.getElementById('modalVehicleBody');
         if (engineElem) engineElem.innerText = '100%';
         if (bodyElem) bodyElem.innerText = '100%';
+        activeVehicleTriggerBtn?.setAttribute('data-engine', '100');
+        activeVehicleTriggerBtn?.setAttribute('data-body', '100');
         notify('Vozidlo bylo opraveno a vyčištěno.', 'success');
     });
 
@@ -292,6 +320,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!await act({ action: 'refuelVehicle', plate: selectedVehiclePlate })) return;
         const fuelElem = document.getElementById('modalVehicleFuel');
         if (fuelElem) fuelElem.innerText = '100%';
+        activeVehicleTriggerBtn?.setAttribute('data-fuel', '100');
         notify('Vozidlo bylo dotankováno.', 'success');
     });
 
@@ -299,6 +328,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!selectedVehiclePlate) return;
         if (!await askConfirm('Opravdu chceš toto vozidlo trvale smazat? Tuto akci nelze vzít zpět.')) return;
         if (!await act({ action: 'deleteVehicle', plate: selectedVehiclePlate })) return;
+        activeVehicleTriggerBtn?.closest('.card')?.remove();
         notify(`Vozidlo ${selectedVehiclePlate} bylo smazáno.`, 'danger');
         vehicleModal?.classList.remove('show');
     });
@@ -311,6 +341,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         if (!await act({ action: 'transferVehicleOwner', plate: selectedVehiclePlate, newOwner })) return;
         document.getElementById('modalVehicleOwner').innerText = newOwner;
+        if (activeVehicleTriggerBtn) {
+            activeVehicleTriggerBtn.setAttribute('data-owner', newOwner);
+            const ownerSpan = activeVehicleTriggerBtn.closest('.card')?.querySelector('.js-veh-owner');
+            if (ownerSpan) ownerSpan.innerText = newOwner;
+        }
         notify(`Majitel vozidla byl změněn na ${newOwner}.`, 'success');
         document.getElementById('vehicleNewOwnerInput').value = '';
     });
@@ -327,6 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- SPRÁVA FRAKCE (MODAL) ---
     let selectedFactionId = null;
+    let activeFactionTriggerBtn = null;
     const frakceModal = document.getElementById('frakceModal');
     const modalFactionTitle = document.getElementById('modalFactionTitle');
     const closeFrakceModalBtn = document.getElementById('closeFrakceModalBtn');
@@ -336,9 +372,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnFactionRemoveFunds = document.getElementById('btnFactionRemoveFunds');
     const btnSaveFactionNote = document.getElementById('btnSaveFactionNote');
 
-    const formatMoney = (n) => `${n < 0 ? '-' : ''}$${Math.abs(n).toLocaleString('cs-CZ')}`;
-
     const openFrakceModal = (btn) => {
+        activeFactionTriggerBtn = btn;
         selectedFactionId = btn.getAttribute('data-faction');
         const label = btn.getAttribute('data-faction-label') || selectedFactionId;
         const type = btn.getAttribute('data-type') || '–';
@@ -379,6 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
     closeFrakceModalBtn?.addEventListener('click', () => {
         frakceModal?.classList.remove('show');
         selectedFactionId = null;
+        activeFactionTriggerBtn = null;
     });
 
     btnPayFactionSalaries?.addEventListener('click', async () => {
@@ -392,6 +428,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!selectedFactionId) return;
         if (!await askConfirm('Opravdu chceš tuto frakci trvale zrušit? Tuto akci nelze vzít zpět.')) return;
         if (!await act({ action: 'deleteFaction', faction: selectedFactionId })) return;
+        activeFactionTriggerBtn?.closest('.card')?.remove();
         notify('Frakce byla zrušena.', 'danger');
         frakceModal?.classList.remove('show');
     });
@@ -402,6 +439,8 @@ document.addEventListener("DOMContentLoaded", () => {
             notify('Zadej platnou částku.', 'danger');
             return;
         }
+        if (!await act({ action: 'setFactionBalance', mode, faction: selectedFactionId, amount })) return;
+
         const balanceElem = document.getElementById('modalFactionBalance');
         const current = Number(balanceElem.getAttribute('data-balance') || 0);
         const updated = mode === 'add' ? current + amount : current - amount;
@@ -409,7 +448,12 @@ document.addEventListener("DOMContentLoaded", () => {
         balanceElem.className = updated < 0 ? 'text-danger' : 'text-success';
         balanceElem.setAttribute('data-balance', String(updated));
 
-        if (!await act({ action: 'setFactionBalance', mode, faction: selectedFactionId, amount })) return;
+        if (activeFactionTriggerBtn) {
+            activeFactionTriggerBtn.setAttribute('data-balance', String(updated));
+            const cardBalance = activeFactionTriggerBtn.closest('.card')?.querySelector('.js-faction-balance');
+            if (cardBalance) cardBalance.innerText = formatMoney(updated);
+        }
+
         notify(
             mode === 'add' ? `Frakci přidáno ${formatMoney(amount)}.` : `Frakci odebráno ${formatMoney(amount)}.`,
             'success'
@@ -447,13 +491,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 let visible = !filterText || text.includes(filterText);
 
                 if (visible && filterType !== 'none') {
-                    visible = item.getAttribute('data-filter-' + filterType) === 'true'
-                        || text.includes(filterType);
+                    visible = item.getAttribute('data-filter-' + filterType) === 'true';
                 }
 
                 if (visible && onlineOnly) {
                     const status = (item.getAttribute('data-status') || '').toLowerCase();
-                    visible = status === 'online' || (!text.includes('[offline]') && !text.includes('offline'));
+                    visible = status === 'online';
                 }
 
                 item.style.display = visible ? '' : 'none';
@@ -465,7 +508,6 @@ document.addEventListener("DOMContentLoaded", () => {
         checkbox?.addEventListener('change', applyFilter);
     }
 
-    // Propojení filtru pro hráče (tabulkové řádky) a karty
     setupFilter({ inputId: 'playerSearchInput', selectId: 'playerSearchType', checkboxId: 'searchOffline', listId: 'playerList', itemSelector: 'tr.player-row' });
     setupFilter({ inputId: 'vehicleSearchInput', selectId: 'vehicleSearchType', listId: 'vehicleList', itemSelector: '.card' });
     setupFilter({ inputId: 'frakceSearchInput', selectId: 'frakceSearchType', listId: 'frakceList', itemSelector: '.card' });
@@ -474,7 +516,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const HANDLED_ELSEWHERE = new Set([
         'approveWhitelist', 'rejectWhitelist', 'closeReport', 'openReportChat',
         'removeAdmin', 'sendAnnouncement', 'unbanPlayer', 'clearWarn', 'editban',
-        'repairVehicleModal', 'refuelVehicleModal', 'plannedrestart'
+        'repairVehicleModal', 'refuelVehicleModal', 'plannedrestart', 'editCompanyBalance'
     ]);
 
     async function handleGenericAction(e) {
@@ -501,6 +543,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const bindGeneric = (btn) => btn.addEventListener('click', handleGenericAction);
     document.querySelectorAll('button[data-action]').forEach(bindGeneric);
+
+    // --- EKONOMIKA: ÚPRAVA ZŮSTATKU FIRMY ---
+    document.querySelectorAll('button[data-action="editCompanyBalance"]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const target = e.currentTarget;
+            const companyId = target.getAttribute('data-id');
+            const newBalanceStr = await askText(`Zadej nový zůstatek pro firmu "${companyId}":`, 'např. 250000');
+            if (newBalanceStr === null || newBalanceStr.trim() === '') return;
+
+            const amount = Number(newBalanceStr.replace(/\s+/g, ''));
+            if (Number.isNaN(amount)) {
+                notify('Zadej platné číslo.', 'danger');
+                return;
+            }
+            if (!await act({ action: 'editCompanyBalance', id: companyId, amount })) return;
+
+            const balanceSpan = target.closest('tr')?.querySelector('.js-company-balance');
+            if (balanceSpan) {
+                balanceSpan.innerText = formatMoney(amount);
+                balanceSpan.className = `js-company-balance ${amount < 0 ? 'text-danger' : 'text-success'}`;
+            }
+            notify(`Zůstatek firmy ${companyId} byl upraven na ${formatMoney(amount)}.`, 'success');
+        });
+    });
 
     // --- PLÁNOVANÝ RESTART SERVERU ---
     const plannedRestartModal = document.getElementById('plannedRestartModal');
@@ -562,7 +628,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!scheduledRestartAt) return;
         plannedRestartActiveBox?.classList.remove('hidden');
         if (plannedRestartActiveTime) plannedRestartActiveTime.innerText = formatClock(scheduledRestartAt);
-        btnPlannedrestart && (btnPlannedrestart.innerText = `Naplánováno: ${formatClock(scheduledRestartAt)}`);
+        if (btnPlannedrestart) btnPlannedrestart.innerText = `Naplánováno: ${formatClock(scheduledRestartAt)}`;
         stopRestartCountdown();
         tickRestartCountdown();
         restartCountdownInterval = setInterval(tickRestartCountdown, 15000);
@@ -625,8 +691,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!await askConfirm(`Naplánovat restart serveru na ${formatClock(target)}?`)) return;
 
-        scheduledRestartAt = target;
-
         if (!await act({
             action: 'scheduleRestart',
             delay: Math.round((target.getTime() - Date.now()) / 1000),
@@ -634,6 +698,7 @@ document.addEventListener("DOMContentLoaded", () => {
             message
         })) return;
 
+        scheduledRestartAt = target;
         activateScheduledRestartUI();
         notify(`Restart naplánován na ${formatClock(target)}.`, 'success');
         plannedRestartModal?.classList.remove('show');
@@ -759,9 +824,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!selectedPlayerId) return;
             const isFrozen = btnFreezePlayer.getAttribute('data-frozen') === 'true';
             const newState = !isFrozen;
+            if (!await act({ action: 'toggleFreeze', id: selectedPlayerId, state: newState })) return;
             btnFreezePlayer.setAttribute('data-frozen', String(newState));
             btnFreezePlayer.innerText = newState ? 'Odemknout (Unfreeze)' : 'Zamknout (Freeze)';
-            if (!await act({ action: 'toggleFreeze', id: selectedPlayerId, state: newState })) return;
             notify(newState ? 'Hráč byl zamčen.' : 'Hráč byl odemčen.', 'warning');
         });
     }
@@ -771,12 +836,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const staffNoteInput = document.getElementById('staffNoteInput');
     if (btnSaveNote) {
         btnSaveNote.addEventListener('click', async () => {
-            if (!selectedPlayerId || !staffNoteInput?.value.trim()) {
-                notify('Poznámka nemůže být prázdná.', 'danger');
-                return;
-            }
-            if (!await act({ action: 'saveStaffNote', id: selectedPlayerId, note: staffNoteInput.value.trim() })) return;
-            notify('Poznámka byla uložena.', 'success');
+            if (!selectedPlayerId) return;
+            const note = staffNoteInput?.value.trim() || '';
+            if (!await act({ action: 'saveStaffNote', id: selectedPlayerId, note })) return;
+            notify(note ? 'Poznámka byla uložena.' : 'Poznámka byla smazána.', 'success');
         });
     }
 
@@ -864,10 +927,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function bindEditBan(btn) {
         btn.addEventListener('click', async (e) => {
-            const id = e.currentTarget.getAttribute('data-id');
+            const target = e.currentTarget;
+            const id = target.getAttribute('data-id');
             const reason = await askText('Nový důvod banu:', 'Cheating, RDM…');
             if (!reason || !reason.trim()) return;
             if (!await act({ action: 'editBan', id, reason: reason.trim() })) return;
+            const reasonCell = target.closest('tr')?.children[2];
+            if (reasonCell) reasonCell.innerText = reason.trim();
             notify('Důvod banu byl upraven.', 'success');
             refreshData();
         });
@@ -900,24 +966,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- VYHLEDÁVÁNÍ HRÁČŮ NA MAPĚ ---
-    const mapPlayerSearch = document.getElementById('mapPlayerSearch');
-    if (mapPlayerSearch) {
-        mapPlayerSearch.addEventListener('keyup', (e) => {
-            const filter = e.target.value.toLowerCase();
-            document.querySelectorAll('#mapPlayerTable tbody tr').forEach(row => {
-                row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
-            });
-        });
-    }
-
-    // --- KLIKNUTÍ NA BLIP NA MAPĚ ---
-    document.querySelectorAll('.map-blip[data-player]').forEach(blip => {
-        blip.addEventListener('click', () => {
-            window.openPlayerModal(blip.getAttribute('data-player'), blip.getAttribute('data-name'));
-        });
-    });
-
     // --- ACL: MODAL ÚPRAVY OPRÁVNĚNÍ ADMINA ---
     const permissionsModal = document.getElementById('permissionsModal');
     const modalAdminName = document.getElementById('modalAdminName');
@@ -931,12 +979,13 @@ document.addEventListener("DOMContentLoaded", () => {
             try { current = JSON.parse(e.currentTarget.getAttribute('data-perms') || '{}'); } catch (_) { /* statický řádek */ }
             document.querySelectorAll('#permissionsModal input[data-perm]').forEach(input => {
                 const key = input.getAttribute('data-perm');
-                if (key in current) input.checked = !!current[key];
+                input.checked = current[key] === true;
             });
             if (modalAdminName) modalAdminName.innerText = `Oprávnění administrátora: ${selectedAdminName}`;
             if (permissionsModal) permissionsModal.classList.add('show');
         });
     }
+
     function attachRemoveAdminHandler(btn) {
         btn.addEventListener('click', async (e) => {
             const target = e.currentTarget;
@@ -997,12 +1046,20 @@ document.addEventListener("DOMContentLoaded", () => {
         refreshData();
     });
 
-    // --- WHITELIST: SCHVÁLENÍ / ODMÍTNUTÍ ---
+    // --- WHITELIST: VYHLEDÁVÁNÍ & SCHVÁLENÍ / ODMÍTNUTÍ ---
     function updateWhitelistBadge() {
-        const remaining = document.querySelectorAll('#whitelist .data-table tbody tr').length;
+        const remaining = document.querySelectorAll('#whitelistTableBody tr').length;
         const badge = document.getElementById('whitelistPendingBadge');
         if (badge) badge.innerText = `Čeká na schválení: ${remaining}`;
     }
+
+    const whitelistSearchInput = document.getElementById('whitelistSearchInput');
+    whitelistSearchInput?.addEventListener('keyup', (e) => {
+        const filter = e.target.value.toLowerCase();
+        document.querySelectorAll('#whitelistTableBody tr').forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
+        });
+    });
 
     document.querySelectorAll('button[data-action="approveWhitelist"], button[data-action="rejectWhitelist"]').forEach(btn => {
         btn.addEventListener('click', async (e) => {
@@ -1024,8 +1081,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const remaining = document.querySelectorAll('#reportsList .report-item').length;
         const badge = document.getElementById('reportsBadge');
         const pendingCount = document.getElementById('reportsPendingCount');
+        const statPending = document.getElementById('statPendingReports');
         if (badge) badge.innerText = `[${remaining}]`;
         if (pendingCount) pendingCount.innerText = String(remaining);
+        if (statPending) statPending.innerText = String(remaining);
     }
 
     const chatModal = document.getElementById('chatModal');
@@ -1044,14 +1103,15 @@ document.addEventListener("DOMContentLoaded", () => {
             notify(`Report #${id} byl uzavřen.`, 'success');
         });
     }
+
     function attachOpenReportChatHandler(btn) {
         btn.addEventListener('click', (e) => {
             const target = e.currentTarget;
             selectedReportId = target.getAttribute('data-id');
             const playerName = target.getAttribute('data-name') || 'hráč';
-            if (chatModalTitle) chatModalTitle.innerText = `Chat s hráčem — Report #${selectedReportId} (${playerName})`;
+            if (chatModalTitle) chatModalTitle.innerText = `Kontaktovat hráče — Report #${selectedReportId} (${playerName})`;
             if (reportChatMessages) {
-                reportChatMessages.innerHTML = '<div class="msg system">Chat k reportu je viditelný pouze pro adminy a hráče.</div>';
+                reportChatMessages.innerHTML = '<div class="msg system">Zpráva bude hráči doručena jako soukromé upozornění.</div>';
             }
             chatModal?.classList.add('show');
         });
@@ -1063,12 +1123,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const handleSendReportChat = async () => {
         if (!reportChatInput?.value.trim() || !selectedReportId) return;
         const msg = reportChatInput.value.trim();
-        const msgElem = document.createElement('div');
-        msgElem.className = 'msg admin';
-        msgElem.innerHTML = `<strong>Admin:</strong> ${escapeHtml(msg)}`;
-        reportChatMessages?.appendChild(msgElem);
-        if (reportChatMessages) reportChatMessages.scrollTop = reportChatMessages.scrollHeight;
         if (!await act({ action: 'sendReportChatMessage', id: selectedReportId, message: msg })) return;
+        appendChatLine(reportChatMessages, 'Admin', msg);
         reportChatInput.value = '';
     };
     sendReportChatBtn?.addEventListener('click', handleSendReportChat);
@@ -1181,8 +1237,10 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        if (!await act({ action: 'addDosEntry', itemType: isMlo ? 'mlo' : 'car', name, code, folder, link, note })) return;
+
         const tr = document.createElement('tr');
-        const safeLink = link ? `<a href="${escapeHtml(link)}" target="_blank" class="table-link">Otevřít odkaz ↗</a>` : '–';
+        const safeLink = link ? `<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer" class="table-link">Otevřít odkaz ↗</a>` : '–';
 
         if (isMlo) {
             tr.innerHTML = `
@@ -1217,7 +1275,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (statDosCars) statDosCars.innerText = String((parseInt(statDosCars.innerText, 10) || 0) + 1);
         }
 
-        if (!await act({ action: 'addDosEntry', itemType: isMlo ? 'mlo' : 'car', name, code, folder, link, note })) return;
         notify(`Položka "${name}" byla zaevidována do DOS.`, 'success');
 
         document.getElementById('dosItemName').value = '';
@@ -1234,8 +1291,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (dutyToggle) {
         dutyToggle.addEventListener('change', async () => {
             const onDuty = dutyToggle.checked;
+            if (!await act({ action: 'toggleAdminDuty', state: onDuty })) {
+                dutyToggle.checked = !onDuty;
+                return;
+            }
             if (dutyStatusLabel) dutyStatusLabel.innerText = onDuty ? 'Na duty' : 'Mimo duty';
-            if (!await act({ action: 'toggleAdminDuty', state: onDuty })) return;
             notify(onDuty ? 'Byl jsi nastaven jako aktivní admin (on duty).' : 'Ukončil jsi admin duty.', onDuty ? 'success' : 'warning');
 
             const activeAdminsElem = document.getElementById('statActiveAdmins');
@@ -1245,6 +1305,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
+    // --- VZHLED ROZHRANÍ ---
+    document.getElementById('settingBgBlur')?.addEventListener('change', (e) => {
+        const blurMap = { none: '0px', medium: '8px', heavy: '16px' };
+        document.documentElement.style.setProperty('--panel-blur', blurMap[e.target.value] || '8px');
+    });
 
     // --- DISCORD WEBHOOK ---
     const btnSaveWebhook = document.getElementById('btnSaveWebhook');
@@ -1318,9 +1384,27 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const TAB_PERMISSIONS = {
-        players: 'players', bans: 'ban', vozidla: 'vehicles', frakce: 'server', economy: 'economy',
-        whitelist: 'whitelist', tools: 'use', map: 'players', reports: 'use', chat: 'use',
-        logs: 'use', dos: 'server', settings: 'server', sadmin: 'staffmanage', logadmin: 'staffmanage'
+        players: 'players', bans: 'ban', economy: 'economy',
+        tools: 'use', reports: 'use', chat: 'use', settings: 'server', sadmin: 'staffmanage'
+    };
+
+    const ACTION_PERMISSIONS = {
+        healPlayer: 'players', gotoPlayer: 'players', bringPlayer: 'players', spectatePlayer: 'players',
+        screenshotPlayer: 'players', toggleFreeze: 'players', forceLogout: 'players', forceCommand: 'players',
+        saveStaffNote: 'players', addWarn: 'ban', banPlayer: 'ban', clearWarn: 'ban',
+        setPlayerMoney: 'economy', repairVeh: 'vehicles', refuelVeh: 'vehicles', maxTuneVeh: 'vehicles',
+        deleteVeh: 'vehicles', wipeVehicles: 'vehicles', wipePeds: 'vehicles',
+        gotoVehicle: 'vehicles', repairVehicleModal: 'vehicles', refuelVehicleModal: 'vehicles',
+        toggleVehicleLock: 'vehicles', toggleVehicleImpound: 'vehicles', deleteVehicle: 'vehicles',
+        setTimeNoon: 'server', setTimeNight: 'server', kickAll: 'server', offserver: 'server',
+        restartWarning: 'server', scheduleRestart: 'server', cancelScheduledRestart: 'server',
+        sendAnnouncement: 'chat', clearServerChat: 'chat',
+        toggleNoclip: 'use', toggleGodmode: 'use', toggleInvis: 'use', reviveSelf: 'use',
+        tpWaypoint: 'use', tpCoords: 'use', tpLegion: 'use', tpSandy: 'use',
+        closeReport: 'use', gotoReportPlayer: 'use', gotoReportLocation: 'use',
+        openReportChat: 'use', createManualReport: 'use', sendReportChatMessage: 'use',
+        addAdmin: 'staffmanage', removeAdmin: 'staffmanage', saveAdminPermissions: 'staffmanage',
+        saveWebhookConfig: 'server', testWebhook: 'server'
     };
 
     function applyMe(me) {
@@ -1333,6 +1417,21 @@ document.addEventListener("DOMContentLoaded", () => {
             const needed = TAB_PERMISSIONS[item.getAttribute('data-target')];
             if (needed) item.classList.toggle('hidden', !perms[needed]);
         });
+        document.querySelectorAll('[data-action]').forEach(button => {
+            const needed = ACTION_PERMISSIONS[button.getAttribute('data-action')];
+            if (needed) button.classList.toggle('hidden', !perms[needed]);
+        });
+        document.getElementById('btnPlannedrestart')?.classList.toggle('hidden', !perms.server);
+        document.getElementById('btnSendAnnouncement')?.classList.toggle('hidden', !perms.chat);
+        document.getElementById('btnQuickBan')?.classList.toggle('hidden', !perms.ban);
+        document.getElementById('btnModalBan')?.classList.toggle('hidden', !perms.ban);
+        document.getElementById('btnAddWarn')?.classList.toggle('hidden', !perms.ban);
+        document.getElementById('btnLogout')?.classList.toggle('hidden', !perms.players);
+        document.getElementById('btnPedMenu')?.classList.toggle('hidden', !perms.players);
+        document.getElementById('btnEcoAdd')?.classList.toggle('hidden', !perms.economy);
+        document.getElementById('btnEcoRemove')?.classList.toggle('hidden', !perms.economy);
+        document.getElementById('btnSaveWebhook')?.classList.toggle('hidden', !perms.server);
+        document.getElementById('btnTestWebhook')?.classList.toggle('hidden', !perms.server);
         document.querySelector('.admin-duty')?.classList.toggle('hidden', !perms.use);
 
         if (dutyToggle) dutyToggle.checked = !!me.onDuty;
@@ -1457,7 +1556,7 @@ document.addEventListener("DOMContentLoaded", () => {
         rows.forEach(row => tbody.appendChild(row));
     }
 
-    // Vykreslení hráčů do nového řádkového layoutu tabulky
+    // Vykreslení hráčů do řádkového layoutu tabulky
     const playerList = document.getElementById('playerList');
     function renderPlayers(players) {
         if (!playerList) return;
@@ -1587,7 +1686,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                     <div class="report-actions">
                         ${r.playerId ? `<button class="btn btn-small" data-action="gotoReportPlayer" data-id="${escapeHtml(r.playerId)}">Přejít k hráči</button>` : ''}
-                        <button class="btn btn-small btn-ghost" data-action="openReportChat" data-id="${escapeHtml(r.id)}" data-name="${escapeHtml(r.playerName)}">Otevřít Chat</button>
+                        <button class="btn btn-small btn-ghost" data-action="openReportChat" data-id="${escapeHtml(r.id)}" data-name="${escapeHtml(r.playerName)}">Napsat hráči</button>
                         <button class="btn btn-small2" data-action="gotoReportLocation" data-id="${escapeHtml(r.id)}">Převzít</button>
                         <button class="btn btn-small btn-danger" data-action="closeReport" data-id="${escapeHtml(r.id)}">Uzavřít</button>
                     </div>
@@ -1633,6 +1732,17 @@ document.addEventListener("DOMContentLoaded", () => {
         if (d.warns) renderWarns(d.warns);
         if (d.reports) renderReports(d.reports);
         if (d.admins) renderAdmins(d.admins);
+        if (d.settings) {
+            const settings = d.settings;
+            const webhook = document.getElementById('discordWebhookUrl');
+            if (webhook) webhook.value = settings.webhook || '';
+            for (const key of ['audit', 'bans', 'economy', 'chat']) {
+                const input = document.getElementById(`webhook${key[0].toUpperCase()}${key.slice(1)}`);
+                if (input) input.checked = key === 'chat'
+                    ? settings.categories?.[key] === true
+                    : settings.categories?.[key] !== false;
+            }
+        }
     }
 
     async function refreshData() {
@@ -1684,6 +1794,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- ZPRACOVÁNÍ ZPRÁV Z LUA KLIENTA ---
     window.addEventListener('message', (event) => {
         const data = event.data;
+        if (!data || !data.action) return;
         switch (data.action) {
             case 'openMenu':
                 setVisible(true);

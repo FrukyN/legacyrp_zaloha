@@ -1,5 +1,20 @@
 Bridge = {}
 
+local Ox
+if GetResourceState('ox_core') == 'started' then
+    Ox = require '@ox_core.lib.init'
+end
+
+local function didAccountChange(result)
+    if type(result) == 'table' and (result.next or result['then'] or result.__cfx_async_retval) then
+        local ok, awaited = pcall(Citizen.Await, result)
+        if not ok then return false end
+        result = awaited
+    end
+    if type(result) == 'table' then return result.success ~= false end
+    return result ~= false
+end
+
 function Bridge.getInfo(src) return {} end
 
 function Bridge.addMoney(src, account, amount) return false end
@@ -48,7 +63,13 @@ if GetResourceState('ox_core') == 'started' then
         elseif account == 'black' then
             return exports.ox_inventory:AddItem(src, 'black_money', amount)
         elseif account == 'bank' then
-            return false
+            if not player.charId then return false end
+            local bank = Ox.GetCharacterAccount(player.charId)
+            if not bank then return false end
+            local ok, result = pcall(function()
+                return bank:addBalance({ amount = amount, message = 'Admin menu: úprava zůstatku' })
+            end)
+            return ok and didAccountChange(result)
         end
         return false
     end
@@ -62,7 +83,13 @@ if GetResourceState('ox_core') == 'started' then
         elseif account == 'black' then
             return exports.ox_inventory:RemoveItem(src, 'black_money', amount)
         elseif account == 'bank' then
-            return false
+            if not player.charId then return false end
+            local bank = Ox.GetCharacterAccount(player.charId)
+            if not bank then return false end
+            local ok, result = pcall(function()
+                return bank:removeBalance({ amount = amount, message = 'Admin menu: úprava zůstatku' })
+            end)
+            return ok and didAccountChange(result)
         end
         return false
     end
