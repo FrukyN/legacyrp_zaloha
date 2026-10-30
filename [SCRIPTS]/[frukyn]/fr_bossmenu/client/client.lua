@@ -539,6 +539,7 @@ function OpenBossMenu()
     lib.showContext('bossmenu_main')
 end
 
+--[[
 RegisterCommand('bossmenu', function()
     local job = getPlayerJob()
     if not job then return end
@@ -549,6 +550,7 @@ RegisterCommand('bossmenu', function()
         notify('error', 'Your grade cannot access boss menu.')
     end
 end, false)
+]]
 
 CreateThread(function()
     while true do
@@ -583,5 +585,21 @@ CreateThread(function()
                 }
             })
         end
+    end
+end)
+
+exports('OpenBossMenu', function()
+    local job = getPlayerJob()
+    if not job then
+        notify('error', 'Nemáš žádnou práci.')
+        return false
+    end
+
+    if canUseBossMenu(job.name, job.grade) then
+        OpenBossMenu()
+        return true
+    else
+        notify('error', 'Tvoje hodnost nemá přístup k boss menu.')
+        return false
     end
 end)

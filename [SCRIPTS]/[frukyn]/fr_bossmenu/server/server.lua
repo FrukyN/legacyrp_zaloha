@@ -2,19 +2,6 @@ local Ox = require '@ox_core.lib.init'
 
 local StashesRegistered = false
 
-local function logDiscord(text, src, color, title)
-    local ok, err = pcall(function()
-        exports.JD_logs:discord(text, src or 0, 0, color or Config.WebhookColors.Info, title or 'bossmenu')
-    end)
-    if not ok and Config.Debug then print(('[bossmenu] JD_logs failed: %s'):format(err)) end
-end
-
-local function banForExploit(src, reason, details)
-    logDiscord(('Exploit detection (%s): %s'):format(reason, details or 'no-details'), src, Config.WebhookColors.Danger, 'bossmenu_anticheat')
-    if not Config.BanOnExploit then return end
-    pcall(function() exports['ElectronAC']:banPlayer(src, reason, details or 'bossmenu exploit', false) end)
-end
-
 local function toInt(value)
     local n = tonumber(value)
     if not n then return nil end
@@ -254,12 +241,12 @@ local function requireBoss(source, requiredGrade, context)
     if not xPlayer then return nil, nil, 'not_loaded' end
     local job = getPlayerJob(xPlayer)
     if not job or not job.name then
-        banForExploit(source, 'bossmenu_invalid_job', context or 'job missing')
+   --     banForExploit(source, 'bossmenu_invalid_job', context or 'job missing')
         return nil, nil, 'invalid_job'
     end
     local jobConfig = getJobConfig(job.name)
     if not jobConfig then
-        banForExploit(source, 'bossmenu_unknown_job', ('%s / %s'):format(context or 'no-context', job.name))
+      --  banForExploit(source, 'bossmenu_unknown_job', ('%s / %s'):format(context or 'no-context', job.name))
         return nil, nil, 'unknown_job'
     end
     local minGrade = math.max(requiredGrade or 0, jobConfig.target and jobConfig.target.minGrade or 0)
@@ -432,7 +419,7 @@ RegisterNetEvent('bossmenu:server:deposit', function(amount, sourceType, account
 
     local value = toInt(amount)
     if not value or value <= 0 or value > Config.MaxDeposit then
-        banForExploit(src, 'bossmenu_bad_amount', ('deposit:%s'):format(tostring(amount)))
+     --   banForExploit(src, 'bossmenu_bad_amount', ('deposit:%s'):format(tostring(amount)))
         return
     end
 
@@ -500,7 +487,7 @@ RegisterNetEvent('bossmenu:server:withdraw', function(amount, targetType, accoun
 
     local value = toInt(amount)
     if not value or value <= 0 or value > Config.MaxWithdraw then
-        banForExploit(src, 'bossmenu_bad_amount', ('withdraw:%s'):format(tostring(amount)))
+       -- banForExploit(src, 'bossmenu_bad_amount', ('withdraw:%s'):format(tostring(amount)))
         return
     end
 
@@ -619,7 +606,7 @@ RegisterNetEvent('bossmenu:server:setGrade', function(identifier, newGrade)
 
     local grade = tonumber(newGrade)
     if not grade or grade < 0 or grade > 20 then
-        banForExploit(src, 'bossmenu_bad_grade', tostring(newGrade))
+      --  banForExploit(src, 'bossmenu_bad_grade', tostring(newGrade))
         return
     end
 
@@ -652,7 +639,7 @@ RegisterNetEvent('bossmenu:server:bonus', function(identifier, amount, reason)
 
     local value = toInt(amount)
     if not value or value <= 0 or value > Config.MaxBonus then
-        banForExploit(src, 'bossmenu_bad_bonus', tostring(amount))
+        -- banForExploit(src, 'bossmenu_bad_bonus', tostring(amount))
         return
     end
 
@@ -700,7 +687,7 @@ RegisterNetEvent('bossmenu:server:addEmployeeNote', function(identifier, note)
     if err then return end
 
     if not hasLength(note, Config.MaxNoteLength) then
-        banForExploit(src, 'bossmenu_bad_note', tostring(note and #note or 'nil'))
+        -- banForExploit(src, 'bossmenu_bad_note', tostring(note and #note or 'nil'))
         return
     end
 
@@ -725,7 +712,7 @@ RegisterNetEvent('bossmenu:server:addAnnouncement', function(message)
     if err then return end
 
     if not hasLength(message, Config.MaxAnnouncementLength) then
-        banForExploit(src, 'bossmenu_bad_announcement', tostring(message and #message or 'nil'))
+        -- banForExploit(src, 'bossmenu_bad_announcement', tostring(message and #message or 'nil'))
         return
     end
 

@@ -1,4 +1,3 @@
-
 if IsPedInVehicle(PlayerPedId(), false) then
     lib.addRadialItem({ id = 'vozidlo', label = 'Vozidlo', icon = 'car', menu = 'vozidlo_main' })
 end
