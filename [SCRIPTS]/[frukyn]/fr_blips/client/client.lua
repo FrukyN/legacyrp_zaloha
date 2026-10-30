@@ -73,10 +73,10 @@ local function initBlips()
         item.blip = createSingleBlip(item.data)
     end
 
-    TriggerServerEvent('dynblips:request')
+    TriggerServerEvent('fr_blips:request')
 end
 
-RegisterNetEvent('dynblips:update', function(jobCounts)
+RegisterNetEvent('fr_blips:update', function(jobCounts)
     lastJobCounts = jobCounts or {}
     updateAllDynamicBlips()
 end)

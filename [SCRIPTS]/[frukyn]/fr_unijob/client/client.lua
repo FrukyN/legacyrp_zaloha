@@ -118,9 +118,8 @@ CreateThread(function()
             })
         end
 
-        -- Dynamické / Statické Blipy (přes export do dynblips)
         if jobData.blip and jobData.blip.enabled then
-            exports.dynblips:RegisterBlip('unijob_' .. jobName, {
+            exports.fr_blips:RegisterBlip('unijob_' .. jobName, {
                 name = jobData.blip.name or jobData.label,
                 coords = jobData.blip.coords,
                 sprite = jobData.blip.sprite,
