@@ -91,7 +91,7 @@ CreateThread(function()
                                     disable = { move = true, car = true, combat = true }
                                 }) then
                                     TriggerServerEvent('unijob:server:silentAlarm', jobName, coords)
-                                    lib.notify({ type = 'inform', description = 'Tichý alarm byl aktivován.' })
+                                    lib.notify({ type = 'info', description = 'Tichý alarm byl aktivován.' })
                                 end
                             end
                         }
@@ -330,7 +330,7 @@ RegisterNetEvent('unijob:client:getUncuffed', function()
     -- Povolení inventáře
     LocalPlayer.state:set('invBusy', false, false)
 
-    lib.notify({ type = 'inform', description = 'Byl jsi odpoután.' })
+    lib.notify({ type = 'info', description = 'Byl jsi odpoután.' })
 end)
 
 -- 4. Klientské eventy pro posazení / vyndání z vozidla

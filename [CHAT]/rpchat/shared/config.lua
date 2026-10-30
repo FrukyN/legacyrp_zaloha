@@ -1,4 +1,4 @@
-wx = {}
+local wx = {}
 
 wx.MaxDocCount = 60 -- Maximum /doc time player can do
 wx.MeDoDisplayTime = 5000 -- [in ms] How long should /me and /do 3D texts be displayed

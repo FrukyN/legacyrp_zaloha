@@ -259,7 +259,7 @@ Citizen.CreateThread(function()
   while true do
     Wait(isRDR and 0 or 250)
 
-    if isRDR and not chatInputActive and IsControlJustPressed(0, `INPUT_MP_TEXT_CHAT_ALL`) then
+    if isRDR and not chatInputActive and IsControlJustPressed(0, 245) then
       openChatInput()
     end
 

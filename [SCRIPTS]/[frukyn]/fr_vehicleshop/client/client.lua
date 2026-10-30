@@ -592,7 +592,7 @@ local function createShop(shopId, shop)
                     local pv = shop.showroom.previewCoords
                     local cv = shop.showroom.camCoords
                     local camRadius = #(vec2(pv.x, pv.y) - vec2(cv.x, cv.y))
-                    local camAngle = math.deg(math.atan2(cv.y - pv.y, cv.x - pv.x))
+                    local camAngle = math.deg(math.atan(cv.y - pv.y, cv.x - pv.x))
                     local camHeight = cv.z - pv.z
 
                     while state.currentShop == shopId do
