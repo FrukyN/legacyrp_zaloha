@@ -17,11 +17,3 @@ server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'server/server.lua'
 }
-
-ui_page 'web/index.html'
-
-files {
-    'web/index.html',
-    'web/style.css',
-    'web/script.js'
-}

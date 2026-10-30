@@ -24,15 +24,4 @@ Config.Blips = {
         onlineColor = 2,
     },
 
-    {
-        name = "Mission Row LSPD",
-        coords = vec3(425.1, -979.5, 30.7),
-        sprite = 60,
-        scale = 0.8,
-        dynamic = true,
-        job = "police",
-        minOnline = 1,
-        offlineColor = 39,
-        onlineColor = 2,
-    }
 }

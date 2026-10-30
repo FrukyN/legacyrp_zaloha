@@ -6,12 +6,16 @@ local function fetchJobCounts()
     local players = Ox.GetPlayers()
 
     for _, player in pairs(players) do
-        local groups = player.getGroups()
-        if groups then
-            for groupName, grade in pairs(groups) do
-                counts[groupName] = (counts[groupName] or 0) + 1
-            end
+        -- Kontrola, zda je hráč přímo ve službě (inService z ox_unijob)
+        local inService = player.get('inService')
+        if inService then
+            counts[inService] = (counts[inService] or 0) + 1
         end
+
+        --[[ 
+        Pokud chceš u některých frakcí počítat hráče i bez duty (jako doteď), 
+        nech tam původní kód místo inService, případně obojí.
+        ]]
     end
     return counts
 end
@@ -43,6 +47,8 @@ CreateThread(function()
         end
     end
 end)
+
+
 
 RegisterNetEvent('dynblips:request', function()
     TriggerClientEvent('dynblips:update', source, currentCounts)

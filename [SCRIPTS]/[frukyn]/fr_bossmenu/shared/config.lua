@@ -1,7 +1,6 @@
 Config = {}
 
 Config.Debug = false
-Config.BanOnExploit = true
 Config.ResourceName = GetCurrentResourceName()
 
 Config.Grades = {

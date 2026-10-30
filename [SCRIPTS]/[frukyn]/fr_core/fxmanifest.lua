@@ -10,6 +10,7 @@ shared_scripts {
 
 client_scripts {
     'client/client.lua',
+    'client/nastaveni.lua',
     'client/vehmenu.lua',
 }
 

@@ -117,6 +117,22 @@ CreateThread(function()
                 }
             })
         end
+
+        -- Dynamické / Statické Blipy (přes export do dynblips)
+        if jobData.blip and jobData.blip.enabled then
+            exports.dynblips:RegisterBlip('unijob_' .. jobName, {
+                name = jobData.blip.name or jobData.label,
+                coords = jobData.blip.coords,
+                sprite = jobData.blip.sprite,
+                scale = jobData.blip.scale or 0.8,
+                color = jobData.blip.color or 0,
+                dynamic = jobData.blip.dynamic or false,
+                job = jobName,
+                minOnline = jobData.blip.minOnline or 1,
+                offlineColor = jobData.blip.offlineColor or 39,
+                onlineColor = jobData.blip.onlineColor or 2
+            })
+        end
     end
 end)
 

@@ -240,15 +240,7 @@ local function requireBoss(source, requiredGrade, context)
     local xPlayer = Ox.GetPlayer(source)
     if not xPlayer then return nil, nil, 'not_loaded' end
     local job = getPlayerJob(xPlayer)
-    if not job or not job.name then
-   --     banForExploit(source, 'bossmenu_invalid_job', context or 'job missing')
-        return nil, nil, 'invalid_job'
-    end
     local jobConfig = getJobConfig(job.name)
-    if not jobConfig then
-      --  banForExploit(source, 'bossmenu_unknown_job', ('%s / %s'):format(context or 'no-context', job.name))
-        return nil, nil, 'unknown_job'
-    end
     local minGrade = math.max(requiredGrade or 0, jobConfig.target and jobConfig.target.minGrade or 0)
     if (job.grade or 0) < minGrade then return nil, nil, 'insufficient_grade' end
     return xPlayer, job, nil
@@ -411,17 +403,12 @@ lib.callback.register('bossmenu:server:getPendingOrders', function(source)
     return MySQL.query.await('SELECT id, item, amount, total_price, ordered_by_name, status, deliver_at, created_at FROM bossmenu_material_orders WHERE job_name = ? ORDER BY id DESC LIMIT 20', { job.name })
 end)
 
--- PENÍZE (VKLAD & VÝBĚR)
 RegisterNetEvent('bossmenu:server:deposit', function(amount, sourceType, accountId)
     local src = source
     local xPlayer, job, err = requireBoss(src, Config.Grades.Finance, 'deposit')
     if err then return end
 
     local value = toInt(amount)
-    if not value or value <= 0 or value > Config.MaxDeposit then
-     --   banForExploit(src, 'bossmenu_bad_amount', ('deposit:%s'):format(tostring(amount)))
-        return
-    end
 
     if sourceType == 'cash' then
         local moneyBal = exports.ox_inventory:GetItemCount(src, 'money') or 0
@@ -476,7 +463,6 @@ RegisterNetEvent('bossmenu:server:deposit', function(amount, sourceType, account
 
     addTransaction(job.name, 'deposit', value, xPlayer, nil, nil, ('boss_deposit (%s)'):format(sourceType))
     addActivity(job.name, tostring(xPlayer.charId), getFullNameFromXPlayer(xPlayer), 'deposit', { amount = value, type = sourceType })
-    logDiscord(('Player deposited %s to society %s via %s'):format(value, job.name, sourceType), src, Config.WebhookColors.Success, 'bossmenu_finance')
     TriggerClientEvent('ox_lib:notify', src, { type = 'success', description = ('Vloženo $%s na firemní účet.'):format(value) })
 end)
 
@@ -486,10 +472,6 @@ RegisterNetEvent('bossmenu:server:withdraw', function(amount, targetType, accoun
     if err then return end
 
     local value = toInt(amount)
-    if not value or value <= 0 or value > Config.MaxWithdraw then
-       -- banForExploit(src, 'bossmenu_bad_amount', ('withdraw:%s'):format(tostring(amount)))
-        return
-    end
 
     local balance = getSocietyBalance(job.name)
     if balance < value then
@@ -535,7 +517,6 @@ RegisterNetEvent('bossmenu:server:withdraw', function(amount, targetType, accoun
 
     addTransaction(job.name, 'withdraw', value, xPlayer, nil, nil, ('boss_withdraw (%s)'):format(targetType))
     addActivity(job.name, tostring(xPlayer.charId), getFullNameFromXPlayer(xPlayer), 'withdraw', { amount = value, type = targetType })
-    logDiscord(('Player withdrew %s from society %s via %s'):format(value, job.name, targetType), src, Config.WebhookColors.Warning, 'bossmenu_finance')
     TriggerClientEvent('ox_lib:notify', src, { type = 'success', description = ('Vybráno $%s z firemního účtu.'):format(value) })
 end)
 
@@ -564,7 +545,6 @@ RegisterNetEvent('bossmenu:server:hire', function(targetSource)
     local targetName = getFullNameFromXPlayer(xTarget)
     addHRHistory(job.name, 'hire', xPlayer, tostring(xTarget.charId), targetName, nil, 1, nil, 'hired')
     addActivity(job.name, tostring(xTarget.charId), targetName, 'hire', { actor = xPlayer.charId })
-    logDiscord(('%s hired %s to %s'):format(getFullNameFromXPlayer(xPlayer), targetName, job.name), src, Config.WebhookColors.Success, 'bossmenu_hr')
 
     TriggerClientEvent('ox_lib:notify', src, { type = 'success', description = ('Hired %s.'):format(targetName) })
     TriggerClientEvent('ox_lib:notify', xTarget.source, { type = 'inform', description = ('You were hired in %s.'):format(job.label or job.name) })
@@ -595,7 +575,6 @@ RegisterNetEvent('bossmenu:server:fire', function(identifier, reason)
 
     addHRHistory(job.name, 'fire', xPlayer, identifier, targetName, current.grade, 0, nil, reason)
     addActivity(job.name, identifier, targetName, 'fire', { actor = tostring(xPlayer.charId), reason = reason })
-    logDiscord(('%s fired %s from %s (%s)'):format(getFullNameFromXPlayer(xPlayer), targetName, job.name, reason), src, Config.WebhookColors.Danger, 'bossmenu_hr')
     TriggerClientEvent('ox_lib:notify', src, { type = 'success', description = ('Fired %s.'):format(targetName) })
 end)
 
@@ -603,12 +582,7 @@ RegisterNetEvent('bossmenu:server:setGrade', function(identifier, newGrade)
     local src = source
     local xPlayer, job, err = requireBoss(src, Config.Grades.Employees, 'set_grade')
     if err then return end
-
     local grade = tonumber(newGrade)
-    if not grade or grade < 0 or grade > 20 then
-      --  banForExploit(src, 'bossmenu_bad_grade', tostring(newGrade))
-        return
-    end
 
     local current = MySQL.single.await('SELECT grade FROM character_groups WHERE charId = ? AND name = ? LIMIT 1', { identifier, job.name })
     if not current then
@@ -628,7 +602,6 @@ RegisterNetEvent('bossmenu:server:setGrade', function(identifier, newGrade)
 
     addHRHistory(job.name, 'grade_change', xPlayer, identifier, targetName, current.grade, grade, nil, 'manual_grade_change')
     addActivity(job.name, identifier, targetName, 'grade_change', { actor = tostring(xPlayer.charId), from = current.grade, to = grade })
-    logDiscord(('%s changed grade for %s from %s to %s (%s)'):format(getFullNameFromXPlayer(xPlayer), targetName, current.grade, grade, job.name), src, Config.WebhookColors.Info, 'bossmenu_hr')
     TriggerClientEvent('ox_lib:notify', src, { type = 'success', description = ('Updated grade for %s.'):format(targetName) })
 end)
 
@@ -677,7 +650,6 @@ RegisterNetEvent('bossmenu:server:bonus', function(identifier, amount, reason)
     addTransaction(job.name, 'bonus', value, xPlayer, identifier, targetName, reason)
     addHRHistory(job.name, 'bonus', xPlayer, identifier, targetName, nil, nil, value, reason)
     addActivity(job.name, identifier, targetName, 'bonus', { actor = tostring(xPlayer.charId), amount = value, reason = reason })
-    logDiscord(('%s gave bonus %s to %s (%s)'):format(getFullNameFromXPlayer(xPlayer), value, targetName, reason), src, Config.WebhookColors.Success, 'bossmenu_finance')
     TriggerClientEvent('ox_lib:notify', src, { type = 'success', description = ('Bonus paid to %s.'):format(targetName) })
 end)
 
@@ -685,11 +657,6 @@ RegisterNetEvent('bossmenu:server:addEmployeeNote', function(identifier, note)
     local src = source
     local xPlayer, job, err = requireBoss(src, Config.Grades.Employees, 'note_add')
     if err then return end
-
-    if not hasLength(note, Config.MaxNoteLength) then
-        -- banForExploit(src, 'bossmenu_bad_note', tostring(note and #note or 'nil'))
-        return
-    end
 
     local current = MySQL.single.await('SELECT grade FROM character_groups WHERE charId = ? AND name = ? LIMIT 1', { identifier, job.name })
     if not current then
@@ -711,11 +678,6 @@ RegisterNetEvent('bossmenu:server:addAnnouncement', function(message)
     local xPlayer, job, err = requireBoss(src, Config.Grades.Employees, 'announcement_add')
     if err then return end
 
-    if not hasLength(message, Config.MaxAnnouncementLength) then
-        -- banForExploit(src, 'bossmenu_bad_announcement', tostring(message and #message or 'nil'))
-        return
-    end
-
     MySQL.insert.await([[
         INSERT INTO bossmenu_announcements (job_name, message, author_identifier, author_name)
         VALUES (?, ?, ?, ?)
@@ -734,7 +696,6 @@ RegisterNetEvent('bossmenu:server:addAnnouncement', function(message)
         end
     end
 
-    logDiscord(('%s posted company announcement for %s: %s'):format(getFullNameFromXPlayer(xPlayer), job.name, message), src, Config.WebhookColors.Info, 'bossmenu_announcement')
     TriggerClientEvent('ox_lib:notify', src, { type = 'success', description = 'Announcement published.' })
 end)
 
@@ -782,7 +743,6 @@ RegisterNetEvent('bossmenu:server:createMaterialOrder', function(itemName, amoun
 
     addTransaction(job.name, 'material_order', total, xPlayer, nil, nil, ('order:%s x%s'):format(itemName, qty))
     addActivity(job.name, tostring(xPlayer.charId), getFullNameFromXPlayer(xPlayer), 'material_order', { item = itemName, amount = qty, price = total })
-    logDiscord(('%s ordered %sx %s for %s (cost %s)'):format(getFullNameFromXPlayer(xPlayer), qty, itemName, job.name, total), src, Config.WebhookColors.Warning, 'bossmenu_orders')
     TriggerClientEvent('ox_lib:notify', src, { type = 'success', description = ('Order placed: %sx %s. Delivery in %s minutes.'):format(qty, itemName, math.floor(deliverySeconds / 60)) })
 end)
 
