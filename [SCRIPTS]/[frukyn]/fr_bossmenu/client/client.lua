@@ -20,7 +20,7 @@ local function getPlayerJob()
 
     return {
         name = jobName,
-        grade = math.max((tonumber(grade) or 1) - 1, 0)
+        grade = tonumber(grade) or 0
     }
 end
 

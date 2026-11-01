@@ -3,11 +3,13 @@ Config = {}
 Config.Debug = false
 Config.ResourceName = GetCurrentResourceName()
 
+--[[
 Config.Grades = {
     Finance = 1,      -- deposit/withdraw/manage account
     Employees = 1,    -- hire/fire/promote/notes/announcements/orders
     FullBoss = 1      -- highest level actions if needed
 }
+]]
 
 Config.MaxDeposit = 5000000
 Config.MaxWithdraw = 2000000
@@ -26,6 +28,8 @@ Config.OrderSystem = {
 
 -- Configure boss locations and stash settings per job
 Config.Jobs = {
+    --[[
+  
     police = {
         label = 'Police Department',
         target = {
@@ -74,6 +78,7 @@ Config.Jobs = {
             }
         }
     }
+      ]]
 }
 
 Config.WebhookColors = {

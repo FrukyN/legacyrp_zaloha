@@ -1,7 +1,7 @@
-local Queue = {}               -- Pole hráčů čekajících ve frontě
-local ReservedLocks = {}       -- Zámky slotů pro hráče, kteří jsou ve fázi tlačítka "Vstoupit" nebo se načítají do hry
-local ReconnectTracker = {}    -- Sledování pokusů o připojení (ochrana proti reconnect spamu)
-local JoinCounter = 0          -- Monotónní počítadlo pro 100% přesné pořadí při shodě bodů
+local Queue = {}            -- Pole hráčů čekajících ve frontě
+local ReservedLocks = {}    -- Zámky slotů pro hráče, kteří jsou ve fázi tlačítka "Vstoupit" nebo se načítají do hry
+local ReconnectTracker = {} -- Sledování pokusů o připojení (ochrana proti reconnect spamu)
+local JoinCounter = 0       -- Monotónní počítadlo pro 100% přesné pořadí při shodě bodů
 local RawCardTemplate = nil
 
 CreateThread(function()
@@ -172,7 +172,8 @@ local function buildCard(state, points, queuePos, queueTotal, timeVal)
 
     local timeLabel = (state == "READY") and "⏳ Automatické připojení za:" or "⏳ Čas ve frontě:"
     local timeValue = (state == "READY") and (tostring(timeVal) .. "s") or formatTime(timeVal)
-    local frontCountText = (state == "READY") and "Připraven ke vstupu" or string.format("%d / %d", queuePos or 1, queueTotal or 1)
+    local frontCountText = (state == "READY") and "Připraven ke vstupu" or
+    string.format("%d / %d", queuePos or 1, queueTotal or 1)
 
     local cardString = RawCardTemplate
     cardString = cardString:gsub("{SUBTITLE}", escapeJsonString(subtitle))
@@ -231,18 +232,15 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
     local ids = getIdentifiers(src)
     local primaryId = ids.license or ids.discord or ids.steam or tostring(src)
 
-    -- Kontrola zapnutého Discordu
     if Config.Discord.RequireDiscord and not ids.discord then
-        deferrals.done("❌ Pro připojení na server musíš mít zapnutý a propojený Discord!")
+        deferrals.done("Pro připojení na server musíš mít zapnutý a propojený Discord!")
         return
     end
 
-    -- Ochrana proti duplicitnímu připojení se stejným identifikátorem
     if getQueuePosition(primaryId) ~= nil then
         removeFromQueue(primaryId)
     end
 
-    -- Ochrana proti opakovanému odpojování a připojování (Anti-Reconnect Abuse)
     local now = os.time()
     local tracker = ReconnectTracker[primaryId]
     if tracker then
@@ -256,7 +254,7 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
 
             for i = waitPenalty, 1, -1 do
                 if GetPlayerPing(src) == 0 then return end
-                deferrals.update(string.format("⚠️ Připojuješ se příliš rychle! Vyčkej ještě %ds...", i))
+                deferrals.update(string.format("Připojuješ se příliš rychle! Vyčkej ještě %ds...", i))
                 Wait(1000)
             end
         else
@@ -267,7 +265,6 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
         ReconnectTracker[primaryId] = { lastAttempt = now, rapidCount = 0 }
     end
 
-    -- Vždy čerstvé načtení bodů z Discordu (obnovení priority po reconnectu)
     local discordData = fetchDiscordPriority(ids.discord)
     local points = discordData.points
     local isReserved = discordData.isReserved
@@ -280,12 +277,11 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
         name = playerName,
         points = points,
         isReserved = isReserved,
-        joinOrder = JoinCounter, -- Rozhoduje při shodě bodů (žádné předbíhání)
+        joinOrder = JoinCounter, 
         queueStartTime = os.time(),
         state = "QUEUE"
     }
 
-    -- Zjistíme, zda je rovnou volný slot (a fronta před ním je prázdná)
     sortQueue()
     if #Queue == 0 and canPlayerTakeSlot(isReserved) then
         playerEntry.state = "READY"
@@ -304,7 +300,6 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
         if isFinished then return end
         isFinished = true
 
-        -- Prodloužíme zámek slotu na dobu, než se hráč reálně načte do hry
         ReservedLocks[primaryId] = {
             expires = os.time() + Config.ConnectingLockTimeout,
             isReserved = isReserved
@@ -315,12 +310,10 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
         deferrals.done()
     end
 
-    -- Smyčka aktualizující kartu hráči
     CreateThread(function()
         local countdown = Config.AutoConnectTimeout
 
         while not isFinished do
-            -- Kontrola, zda hráč nezavřel FiveM / neodpojil se z fronty
             if GetPlayerPing(src) == 0 then
                 isFinished = true
                 removeFromQueue(primaryId)
@@ -330,7 +323,6 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
             end
 
             if playerEntry.state == "QUEUE" then
-                -- Zkontrolujeme, zda se pro něj neuvolnilo místo
                 processQueue()
 
                 local pos = getQueuePosition(primaryId)
@@ -343,7 +335,6 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
 
                 Wait(1000)
             elseif playerEntry.state == "READY" then
-                -- Hráč má volný slot -> zobrazíme tlačítko "Vstoupit do hry" a odpočet
                 local card = buildCard("READY", playerEntry.points, 0, #Queue, countdown)
 
                 if card then
@@ -357,7 +348,6 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
                 Wait(1000)
                 countdown = countdown - 1
 
-                -- Pokud hráč nic neudělá, po vypršení limitu se připojí automaticky
                 if countdown <= 0 and not isFinished then
                     finishConnection()
                 end
@@ -366,7 +356,6 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
     end)
 end)
 
--- Jakmile se hráč plně připojí na server, uvolníme dočasný zámek (už je započítán v #GetPlayers())
 AddEventHandler('playerJoining', function()
     local src = source
     local ids = getIdentifiers(src)
@@ -376,7 +365,6 @@ AddEventHandler('playerJoining', function()
     end
 end)
 
--- Při odpojení hráče ze serveru uvolníme případný zámek a rovnou posuneme frontu
 AddEventHandler('playerDropped', function()
     local src = source
     local ids = getIdentifiers(src)

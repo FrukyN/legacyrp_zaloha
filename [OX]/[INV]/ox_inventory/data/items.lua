@@ -63,6 +63,29 @@ return {
 			export = 'notepad.useNotepad'
 		}
 	},
+['carkey'] = {
+    label = 'Klíče od auta',
+    weight = 50,
+    stack = false,
+    close = true,
+    description = 'Klíče k vozidlu.',
+    client = {
+        export = 'fr_carkeys.UseCarKey'
+    }
+},
+
+['lockpick'] = {
+    label = 'Šperhák',
+    weight = 150,
+    stack = true,
+    close = true,
+    description = 'Nástroj na vypáčení zámků a startování přes kabely.',
+    client = {
+        export = 'fr_carkeys.StartHotwire'
+    }
+},
+
+
 	['payment_terminal'] = { label = 'Platební terminál', weight = 1500, stack = false, close = true, client = { export = 'fr_faktury.UseTerminal' } },
 	['receipt'] = { label = 'Účtenka', weight = 1, stack = false, close = true },
 
@@ -257,10 +280,7 @@ return {
 		}
 	},
 
-	['lockpick'] = {
-		label = 'Lockpick',
-		weight = 160,
-	},
+
 
 	['phone'] = {
 		label = 'Phone',

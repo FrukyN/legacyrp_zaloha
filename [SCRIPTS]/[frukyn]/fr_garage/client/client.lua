@@ -178,6 +178,8 @@ local function openGarage(id, searchQuery)
                         }
                     end
 
+-- //TODO: pridat moznost dat jinemu hraci pristup k autu
+
                     actions[#actions + 1] = {
                         title = 'Přejmenovat vozidlo',
                         icon = 'pen',

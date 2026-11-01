@@ -90,7 +90,7 @@ local function buildAccountOptions(accounts)
 end
 
 local function selectBankAccount()
-    local accounts = lib.callback.await('cwrp_vehicleshop:getBankAccounts', false)
+    local accounts = lib.callback.await('fr_vehicleshop:getBankAccounts', false)
 
     if not accounts or #accounts == 0 then
         notify('Nemáš žádný účet, ze kterého lze platit.', 'error')
@@ -114,7 +114,7 @@ end
 
 -- Výběr frakčního účtu pro platbu
 local function selectFactionAccount()
-    local accounts = lib.callback.await('cwrp_vehicleshop:getFactionAccounts', false)
+    local accounts = lib.callback.await('fr_vehicleshop:getFactionAccounts', false)
 
     if not accounts or #accounts == 0 then
         notify('Nemáš roli Majitele nebo Manažera v žádné frakci s přístupem k financím.', 'error')
@@ -203,15 +203,15 @@ local function buildVehicleList(shopId, shop, category)
                         elseif IsControlJustPressed(0, 177) then
                             lib.hideTextUI()
                             deletePreviewVehicle()
-                            lib.showContext(('cwrp_vehicleshop_veh_%s_%s'):format(shopId, category.key))
+                            lib.showContext(('fr_vehicleshop_veh_%s_%s'):format(shopId, category.key))
                             break
                         elseif IsControlJustPressed(0, 73) then
                             lib.hideTextUI()
                             deletePreviewVehicle()
-                            lib.callback('cwrp_vehicleshop:requestTestDrive', false, function(response)
+                            lib.callback('fr_vehicleshop:requestTestDrive', false, function(response)
                                 if not response.ok then
                                     notify(response.message or 'Testovací jízda nebyla povolena.', 'error')
-                                    lib.showContext(('cwrp_vehicleshop_veh_%s_%s'):format(shopId, category.key))
+                                    lib.showContext(('fr_vehicleshop_veh_%s_%s'):format(shopId, category.key))
                                     return
                                 end
                                 local spawn = shop.showroom.testDrive and shop.showroom.testDrive.spawnCoords
@@ -225,6 +225,8 @@ local function buildVehicleList(shopId, shop, category)
                                 SetPedIntoVehicle(ped, vehicle, -1)
                                 SetEntityAsMissionEntity(vehicle, true, true)
                                 SetVehicleNumberPlateText(vehicle, 'TESTDRV')
+                                Entity(vehicle).state:set('hotwired', true, false) -- Povolí motor pro testovací jízdu bez klíče
+                                SetVehicleEngineOn(vehicle, true, true, false)
                                 local colorData = Config.ColorOptions[state.previewColor] or Config.ColorOptions[1]
                                 SetVehicleColours(vehicle, colorData.primary, colorData.secondary)
 
@@ -288,7 +290,7 @@ local function buildFilteredVehicleList(shopId, shop, filters)
                 description = 'Zkuste upravit parametry hledání.',
                 icon = 'circle-xmark',
                 onSelect = function()
-                    lib.showContext(('cwrp_vehicleshop_cat_%s'):format(shopId))
+                    lib.showContext(('fr_vehicleshop_cat_%s'):format(shopId))
                 end
             }
         }
@@ -322,15 +324,15 @@ local function buildFilteredVehicleList(shopId, shop, filters)
                         elseif IsControlJustPressed(0, 177) then
                             lib.hideTextUI()
                             deletePreviewVehicle()
-                            lib.showContext(('cwrp_vehicleshop_veh_%s_filtered_results'):format(shopId))
+                            lib.showContext(('fr_vehicleshop_veh_%s_filtered_results'):format(shopId))
                             break
                         elseif IsControlJustPressed(0, 73) then
                             lib.hideTextUI()
                             deletePreviewVehicle()
-                            lib.callback('cwrp_vehicleshop:requestTestDrive', false, function(response)
+                            lib.callback('fr_vehicleshop:requestTestDrive', false, function(response)
                                 if not response.ok then 
                                     notify(response.message or 'Testovací jízda nebyla povolena.', 'error') 
-                                    lib.showContext(('cwrp_vehicleshop_veh_%s_filtered_results'):format(shopId))
+                                    lib.showContext(('fr_vehicleshop_veh_%s_filtered_results'):format(shopId))
                                     return
                                 end
                                 local spawn = shop.showroom.testDrive and shop.showroom.testDrive.spawnCoords
@@ -389,8 +391,8 @@ function openPurchaseMenu(shopId, shop, veh, categoryKey)
     state.inDialog = false
 
     local backMenuId = categoryKey == 'filtered_results' 
-        and ('cwrp_vehicleshop_veh_%s_filtered_results'):format(shopId)
-        or ('cwrp_vehicleshop_veh_%s_%s'):format(shopId, categoryKey)
+        and ('fr_vehicleshop_veh_%s_filtered_results'):format(shopId)
+        or ('fr_vehicleshop_veh_%s_%s'):format(shopId, categoryKey)
 
     if not input then
         lib.showContext(backMenuId)
@@ -421,7 +423,7 @@ function openPurchaseMenu(shopId, shop, veh, categoryKey)
         end
     end
 
-    lib.callback('cwrp_vehicleshop:buyVehicle', false, function(response)
+    lib.callback('fr_vehicleshop:buyVehicle', false, function(response)
         if not response.ok then
             notify(response.message or 'Nákup se nepovedl.', 'error')
             lib.showContext(backMenuId)
@@ -441,14 +443,14 @@ function openPurchaseMenu(shopId, shop, veh, categoryKey)
                 timeout = timeout - 1
             end
 
-            if DoesEntityExist(vehicle) then
+if DoesEntityExist(vehicle) then
                 SetPedIntoVehicle(ped, vehicle, -1)
                 SetVehicleNumberPlateText(vehicle, response.plate)
                 local colorData = Config.ColorOptions[state.previewColor] or Config.ColorOptions[1]
                 SetVehicleColours(vehicle, colorData.primary, colorData.secondary)
             end
 
-            giveKeys(response.plate)
+            -- giveKeys(response.plate) <-- TENTO ŘÁDEK SMAŽ, klíče už dává server!
         else
             notify('Spawn byl obsazen, vozidlo bylo uloženo do garáže.', 'inform')
         end
@@ -501,7 +503,7 @@ local function openCategoryMenu(shopId)
             state.inDialog = false
 
             if not input then
-                lib.showContext(('cwrp_vehicleshop_cat_%s'):format(shopId))
+                lib.showContext(('fr_vehicleshop_cat_%s'):format(shopId))
                 return
             end
 
@@ -513,9 +515,9 @@ local function openCategoryMenu(shopId)
             }
 
             lib.registerContext({
-                id = ('cwrp_vehicleshop_veh_%s_filtered_results'):format(shopId),
+                id = ('fr_vehicleshop_veh_%s_filtered_results'):format(shopId),
                 title = 'Výsledky hledání',
-                menu = ('cwrp_vehicleshop_cat_%s'):format(shopId),
+                menu = ('fr_vehicleshop_cat_%s'):format(shopId),
                 options = buildFilteredVehicleList(shopId, shop, searchFilters),
                 onExit = function()
                     if not state.inDialog then
@@ -525,7 +527,7 @@ local function openCategoryMenu(shopId)
                 end
             })
             
-            lib.showContext(('cwrp_vehicleshop_veh_%s_filtered_results'):format(shopId))
+            lib.showContext(('fr_vehicleshop_veh_%s_filtered_results'):format(shopId))
         end
     }
 
@@ -536,9 +538,9 @@ local function openCategoryMenu(shopId)
             icon = 'list',
             onSelect = function()
                 lib.registerContext({
-                    id = ('cwrp_vehicleshop_veh_%s_%s'):format(shopId, category.key),
+                    id = ('fr_vehicleshop_veh_%s_%s'):format(shopId, category.key),
                     title = ('%s - %s'):format(shop.label, category.label),
-                    menu = ('cwrp_vehicleshop_cat_%s'):format(shopId),
+                    menu = ('fr_vehicleshop_cat_%s'):format(shopId),
                     options = buildVehicleList(shopId, shop, category),
                     onExit = function()
                         if not state.inDialog then
@@ -547,13 +549,13 @@ local function openCategoryMenu(shopId)
                         end
                     end
                 })
-                lib.showContext(('cwrp_vehicleshop_veh_%s_%s'):format(shopId, category.key))
+                lib.showContext(('fr_vehicleshop_veh_%s_%s'):format(shopId, category.key))
             end
         }
     end
 
     lib.registerContext({
-        id = ('cwrp_vehicleshop_cat_%s'):format(shopId),
+        id = ('fr_vehicleshop_cat_%s'):format(shopId),
         title = shop.label,
         options = options,
         onExit = function()
@@ -564,7 +566,7 @@ local function openCategoryMenu(shopId)
         end
     })
 
-    lib.showContext(('cwrp_vehicleshop_cat_%s'):format(shopId))
+    lib.showContext(('fr_vehicleshop_cat_%s'):format(shopId))
 end
 
 local function createShop(shopId, shop)
@@ -580,7 +582,7 @@ local function createShop(shopId, shop)
 
     exports.ox_target:addLocalEntity(npc, {
         {
-            name = ('cwrp_vehicleshop_%s_open'):format(shopId),
+            name = ('fr_vehicleshop_%s_open'):format(shopId),
             icon = 'fa-solid fa-car',
             label = ('Otevřít %s'):format(shop.label),
             distance = 2.2,
@@ -652,7 +654,7 @@ CreateThread(function()
     end
 end)
 
-RegisterNetEvent('cwrp_vehicleshop:giveKeys', function(plate) giveKeys(plate) end)
+RegisterNetEvent('fr_vehicleshop:giveKeys', function(plate) giveKeys(plate) end)
 
 CreateThread(function()
     local lastTimeLeft = -1

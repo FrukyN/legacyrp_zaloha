@@ -28,9 +28,10 @@ Config.ColorOptions = {
 }
 
 Config.KeysExport = {
-    enabled = false,
-    resource = 'mykeys',
-    export = 'GiveVehicleKeys'
+    enabled = true,
+    resource = 'fr_carkeys', -- Zde dej přesný název složky tvého scriptu na klíče
+    export = 'GiveCarKey',
+    count = 2                -- Počet klíčů při koupi vozidla (hlavní + náhradní)
 }
 
 Config.Shops = {

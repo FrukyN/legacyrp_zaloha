@@ -111,7 +111,7 @@ CreateThread(function()
                         label = 'Otevřít Boss Menu (' .. jobData.label .. ')',
                         groups = { [jobName] = jobData.bossmenu.minGrade or 1 },
                         onSelect = function()
-                            exports.bossmenu:OpenBossMenu() -- Zavolání našeho nového exportu
+                            exports.fr_bossmenu:OpenBossMenu() -- Zavolání našeho nového exportu
                         end
                     }
                 }

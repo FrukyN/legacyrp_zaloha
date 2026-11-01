@@ -54,32 +54,43 @@ Config.Jobs = {
         }
     },
 
-    ['bennys'] = {
-        label = 'Bennys Mechanici',
+    ['hayes'] = {
+        label = 'hayes',
         canCuff = false,
+        blip = {
+            enabled = true,
+            coords = vec3(482.6600, -1320.2109, 36.3819),
+            sprite = 60,
+            scale = 0.8,
+            dynamic = true,      -- Bude měnit barvu podle počtu lidí
+            minOnline = 1,       -- Od kolika lidí zezelená
+            offlineColor = 39,   -- Šedá (mimo provoz)
+            onlineColor = 2      -- Zelená (aktivní)
+        },
         duty = {
-            vec3(-205.50, -1310.10, 31.29)
+            vec3(472.2060, -1310.8534, 29.2185)
         },
         wardrobes = {
-            vec3(-210.15, -1320.40, 31.29)
+            vec3(472.2060, -1310.8534, 29.2185)
         },
         alarms = {
-            vec3(-198.20, -1315.50, 31.29)
+            vec3(472.2060, -1310.8534, 29.2185)
         },
         bossmenu = {
-            coords = vec3(448.4, -973.2, 30.6),
-            minGrade = 3
+            coords = vec3(472.2060, -1310.8534, 29.2185),
+            minGrade = 0
         },
         stashes = {
             {
-                id = 'bennys_shared',
-                label = 'Sklad dílů',
-                coords = vec3(-215.30, -1318.90, 31.29),
-                slots = 80,
-                weight = 300000,
-                shared = true,
-                minGrade = 1
-            }
+                id = 'asdasd',
+                label = 'Policejní zbrojnice (Frakční)',
+                coords = vec3(452.30, -980.10, 30.69),
+                slots = 100,
+                weight = 500000,
+                shared = true,  -- Frakční sklad (vidí všichni s přístupem)
+                minGrade = 1    -- Minimální hodnost pro otevření
+            },
+
         }
-    }
+    },
 }

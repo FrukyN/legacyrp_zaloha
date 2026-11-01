@@ -239,10 +239,18 @@ end
 local function requireBoss(source, requiredGrade, context)
     local xPlayer = Ox.GetPlayer(source)
     if not xPlayer then return nil, nil, 'not_loaded' end
+
     local job = getPlayerJob(xPlayer)
+    if not job then return nil, nil, 'no_job' end
+
     local jobConfig = getJobConfig(job.name)
-    local minGrade = math.max(requiredGrade or 0, jobConfig.target and jobConfig.target.minGrade or 0)
-    if (job.grade or 0) < minGrade then return nil, nil, 'insufficient_grade' end
+    if not jobConfig then return nil, nil, 'invalid_job' end
+
+    local minGrade = (jobConfig.target and jobConfig.target.minGrade) or 0
+    if (job.grade or 0) < minGrade then
+        return nil, nil, 'insufficient_grade'
+    end
+
     return xPlayer, job, nil
 end
 

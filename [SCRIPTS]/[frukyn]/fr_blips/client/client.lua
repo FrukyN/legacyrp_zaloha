@@ -29,7 +29,6 @@ local function createSingleBlip(data)
 end
 
 local function updateAllDynamicBlips()
-    -- 1. Aktualizace blipů z lokálního Config.Blips
     for i, data in ipairs(Config.Blips) do
         if data.dynamic and createdBlips[i] and DoesBlipExist(createdBlips[i]) then
             local count = lastJobCounts[data.job] or 0
@@ -41,7 +40,6 @@ local function updateAllDynamicBlips()
         end
     end
 
-    -- 2. Aktualizace blipů přidaných přes export (např. z ox_unijob)
     for id, item in pairs(externalBlips) do
         local data = item.data
         local blip = item.blip
@@ -57,7 +55,6 @@ local function updateAllDynamicBlips()
 end
 
 local function initBlips()
-    -- Smazání a znovuvytvoření Config blipů
     for _, blip in pairs(createdBlips) do
         if DoesBlipExist(blip) then RemoveBlip(blip) end
     end
@@ -67,7 +64,6 @@ local function initBlips()
         createdBlips[i] = createSingleBlip(data)
     end
 
-    -- Obnovení externích blipů (pokud už byly zaregistrovány)
     for id, item in pairs(externalBlips) do
         if DoesBlipExist(item.blip) then RemoveBlip(item.blip) end
         item.blip = createSingleBlip(item.data)
@@ -90,14 +86,11 @@ AddEventHandler('onResourceStart', function(resourceName)
     initBlips()
 end)
 
--- ==========================================
--- EXPORTY PRO POUŽITÍ V JINÝCH SKRIPTECH
--- ==========================================
+-- EXPORTY
 
 exports('RegisterBlip', function(id, data)
     if not id or not data or not data.coords then return false end
 
-    -- Pokud blip s tímto ID už existuje, nejdřív ho smažeme
     if externalBlips[id] and DoesBlipExist(externalBlips[id].blip) then
         RemoveBlip(externalBlips[id].blip)
     end

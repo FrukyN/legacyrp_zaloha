@@ -6,9 +6,8 @@ FR_HUD = {
 
 local currentVoiceRange = 2
 
--- ==========================================
--- NAČTENÍ ULOŽENÝCH DAT (KVP PAMĚŤ)
--- ==========================================
+-- NAČTENÍ ULOŽENÝCH DAT
+
 local savedPos = GetResourceKvpString("fr_hud_position") or "top-right"
 
 local savedLogo = GetResourceKvpString("fr_hud_logo")
@@ -25,7 +24,6 @@ CreateThread(function()
     SendNUIMessage({ action = "setPosition", position = savedPos })
     SendNUIMessage({ action = "setLogo", state = FR_HUD.showLogo })
 
-    -- OPRAVA: Získání aktuální vzdálenosti z pma-voice ihned po startu a odeslání do UI
     if LocalPlayer.state.proximity then
         currentVoiceRange = LocalPlayer.state.proximity.mode or 2
     end
@@ -33,13 +31,15 @@ CreateThread(function()
 end)
 
 
--- ==========================================
 -- EXPORTY A INTEGRACE
--- ==========================================
+
 exports('toggleHud', function(state)
     FR_HUD.isVisible = state
-    SendNUIMessage({ action = "setVisible", state = FR_HUD.isVisible and not FR_HUD.inCinematic and
-    not IsPauseMenuActive() })
+    SendNUIMessage({
+        action = "setVisible",
+        state = FR_HUD.isVisible and not FR_HUD.inCinematic and
+            not IsPauseMenuActive()
+    })
 end)
 
 exports('loadHud', function()
@@ -68,7 +68,6 @@ CreateThread(function()
             SendNUIMessage({ action = "setVisible", state = state })
         end
 
-        -- OPRAVA: Detekce mluvení vytažena ven. Nyní běží neustále a synchronizuje UI i když je HUD zrovna schovaný přes ESC.
         local isTalking = NetworkIsPlayerTalking(PlayerId())
         if isTalking ~= wasTalking then
             wasTalking = isTalking
@@ -77,9 +76,8 @@ CreateThread(function()
     end
 end)
 
--- ==========================================
--- OX_LIB NASTAVENÍ (Rozšířené Menu s pamětí)
--- ==========================================
+-- OX_LIB NASTAVENÍ
+
 local function setPosition(pos)
     SetResourceKvp("fr_hud_position", pos)
     SendNUIMessage({ action = "setPosition", position = pos })
@@ -126,8 +124,12 @@ lib.registerContext({
                 FR_HUD.inCinematic = not FR_HUD.inCinematic
                 SendNUIMessage({ action = "setVisible", state = not FR_HUD.inCinematic })
                 SendNUIMessage({ action = "setCinematic", state = FR_HUD.inCinematic })
-                lib.notify({ title = 'HUD', description = FR_HUD.inCinematic and 'Filmový režim ZAPNUT' or
-                'Filmový režim VYPNUT', type = 'info' })
+                lib.notify({
+                    title = 'HUD',
+                    description = FR_HUD.inCinematic and 'Filmový režim ZAPNUT' or
+                        'Filmový režim VYPNUT',
+                    type = 'info'
+                })
                 ExecuteCommand("clear")
             end
         },

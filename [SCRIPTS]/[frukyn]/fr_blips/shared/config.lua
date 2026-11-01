@@ -11,7 +11,7 @@ Config.Blips = {
         scale = 0.8,
         dynamic = false
     },
-
+--[[
     {
         name = "Kavárna (Bean Machine)",
         coords = vec3(-43.0, -1749.0, 29.0),
@@ -23,5 +23,5 @@ Config.Blips = {
         offlineColor = 39,
         onlineColor = 2,
     },
-
+]]
 }

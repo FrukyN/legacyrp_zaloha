@@ -9,10 +9,10 @@ shared_scripts {
 }
 
 client_scripts {
-    'client/main.lua',
+    'client/client.lua',
 }
 
 server_scripts {
     'config/sv_config.lua',
-    'server/main.lua',
+    'server/server.lua',
 }

@@ -107,7 +107,6 @@ CreateThread(function()
         RemoveAllPickupsOfType(`PICKUP_WEAPON_PISTOL`)
 
         if Config.DisableNPCDrops then
-            -- Efektivnější způsob iterace přes existující pedy pomocí GetGamePool
             local peds = GetGamePool('CPed')
             for i = 1, #peds do
                 local npc = peds[i]

@@ -327,18 +327,28 @@ local function saveOwnedVehicle(player, shopId, vehData, plate, colorIndex, spaw
     return dbId, netId
 end
 
-local function giveVehicleKey(source, plate)
+local function giveVehicleKey(source, plate, modelLabel)
+    -- 1. Náš nový systém klíčů přes itemy (dá 2 klíče přímo na serveru)
+    if Config.KeysExport.enabled then
+        local res = Config.KeysExport.resource
+        local exp = Config.KeysExport.export
+        local count = Config.KeysExport.count or 2
+
+        if res and exp and GetResourceState(res) == 'started' then
+            for i = 1, count do
+                exports[res][exp](source, plate, modelLabel)
+            end
+            return true
+        end
+    end
+
+    -- 2. Fallback na fr_garage, pokud bys někdy vypnul Config.KeysExport
     if GetResourceState('fr_garage') == 'started' then
         local ok, gave = pcall(function()
             return exports.fr_garage:GiveKey(source, plate)
         end)
 
         if ok and gave then return true end
-    end
-
-    if Config.KeysExport.enabled then
-        TriggerClientEvent('cwrp_vehicleshop:giveKeys', source, plate)
-        return true
     end
 
     return false
@@ -348,15 +358,15 @@ local function countOwnedVehicles(charId)
     return MySQL.scalar.await('SELECT COUNT(1) FROM `vehicles` WHERE `owner` = ?', { charId }) or 0
 end
 
-lib.callback.register('cwrp_vehicleshop:getBankAccounts', function(source)
+lib.callback.register('fr_vehicleshop:getBankAccounts', function(source)
     return getBankAccounts(source)
 end)
 
-lib.callback.register('cwrp_vehicleshop:getFactionAccounts', function(source)
+lib.callback.register('fr_vehicleshop:getFactionAccounts', function(source)
     return getFactionAccounts(source)
 end)
 
-lib.callback.register('cwrp_vehicleshop:requestTestDrive', function(source, payload)
+lib.callback.register('fr_vehicleshop:requestTestDrive', function(source, payload)
     local player = Ox.GetPlayer(source)
     if not player then return { ok = false, message = 'Hráč nebyl nalezen.' } end
     if type(payload) ~= 'table' then return { ok = false, message = 'Neplatný požadavek.' } end
@@ -383,7 +393,7 @@ lib.callback.register('cwrp_vehicleshop:requestTestDrive', function(source, payl
     return { ok = true }
 end)
 
-lib.callback.register('cwrp_vehicleshop:buyVehicle', function(source, payload)
+lib.callback.register('fr_vehicleshop:buyVehicle', function(source, payload)
     local player = Ox.GetPlayer(source)
     if type(payload) ~= 'table' then return { ok = false, message = 'Neplatny pozadavek.' } end
     if not player then return { ok = false, message = 'Hráč nebyl nalezen.' } end
@@ -394,6 +404,7 @@ lib.callback.register('cwrp_vehicleshop:buyVehicle', function(source, payload)
     local payType = tostring(payload.payType or '')
     local accountId = tonumber(payload.accountId)
     local factionGroup = payload.factionGroup
+    
 
     if not shop or not veh then return { ok = false, message = 'Neplatný výběr vozidla.' } end
     if not Config.ColorOptions[color or -1] then return { ok = false, message = 'Neplatná barva.' } end
@@ -420,10 +431,12 @@ lib.callback.register('cwrp_vehicleshop:buyVehicle', function(source, payload)
     local dbId, netId = saveOwnedVehicle(player, payload.shopId, veh, plate, color, spawnNow, spawnCoords, payload.class, factionGroup)
     spawnNow = netId ~= nil
 
-    giveVehicleKey(source, plate)
+    -- Předáme source, SPZ a label vozidla (dá hráči 2x item klíče s metadaty)
+    giveVehicleKey(source, plate, veh.label)
 
     local charName = player.get('firstName') .. ' ' .. player.get('lastName')
-    local logType = payType == 'faction' and ('Frakce: ' .. tostring(factionGroup)) or payType
+    local isFaction = payType == 'faction' and factionGroup and factionGroup ~= ''
+    local logType = isFaction and ('Frakce: ' .. tostring(factionGroup)) or payType
     logDiscord(('%s koupil %s za $%s [%s], SPZ: %s'):format(charName, veh.label, veh.price, logType, plate), source, 65280, 'vehicle_shop')
 
     return {

@@ -6,7 +6,7 @@ lib.registerRadial({
     id = 'nastaveni_main',
     items = {
         {
-            label = 'Přepnout mlácení R',
+            label = 'Přepnout mlácení (R)',
             icon = 'hand-fist',
             onSelect = function()
                 isMeleeDisabled = not isMeleeDisabled
@@ -22,7 +22,7 @@ lib.registerRadial({
             icon = 'comment-slash',
             onSelect = function()
                 local isHidden = exports.chat:toggleChat()
-                
+
                 if isHidden then
                     lib.notify({ title = 'Nastavení', description = 'Chat byl SKRYT', type = 'info' })
                 else
@@ -35,6 +35,22 @@ lib.registerRadial({
             icon = 'user',
             onSelect = function()
                 ExecuteCommand('hudsettings')
+            end
+        },
+
+        {
+            label = 'Bindmenu',
+            icon = 'user',
+            onSelect = function()
+                ExecuteCommand('bindmenu')
+            end
+        },
+
+        {
+            label = 'Streamer mód',
+            icon = 'user',
+            onSelect = function()
+                ExecuteCommand('streamermode')
             end
         },
         {
@@ -52,7 +68,7 @@ CreateThread(function()
         Wait(0)
 
         if isMeleeDisabled then
-            DisableControlAction(0, 140, true) -- R
+            DisableControlAction(0, 140, true)
         end
     end
 end)
