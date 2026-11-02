@@ -86,8 +86,6 @@ AddEventHandler('onResourceStart', function(resourceName)
     initBlips()
 end)
 
--- EXPORTY
-
 exports('RegisterBlip', function(id, data)
     if not id or not data or not data.coords then return false end
 

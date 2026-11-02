@@ -1,6 +1,11 @@
 local Ox = require '@ox_core.lib.init'
 local playerState = {}
 
+local function getShop(shopId)
+    if not shopId then return nil end
+    return Config.Shops[shopId]
+end
+
 local function getVehicleFromShop(shop, model)
     if not shop then return nil end
     for i = 1, #shop.vehicles do
@@ -193,6 +198,43 @@ local function getFactionAccounts(source)
     return result
 end
 
+-- Vrátí seznam frakcí, ve kterých má hráč úplně nejvyšší možnou hodnost (MAX grade)
+local function getPlayerBossFactions(source)
+    local player = Ox.GetPlayer(source)
+    if not player or not player.charId then return {} end
+
+    local rows = MySQL.query.await([[
+        SELECT 
+            cg.name, 
+            cg.grade, 
+            g.label,
+            gg.label AS gradeLabel
+        FROM character_groups cg
+        INNER JOIN ox_groups g ON cg.name = g.name
+        LEFT JOIN ox_group_grades gg ON cg.name = gg.group AND cg.grade = gg.grade
+        WHERE cg.charId = ?
+          AND cg.grade = (
+              SELECT MAX(gg2.grade) 
+              FROM ox_group_grades gg2 
+              WHERE gg2.group = cg.name
+          )
+    ]], { player.charId }) or {}
+
+    return rows
+end
+
+-- Ověří, zda má hráč v dané frakci nejvyšší hodnost
+local function isPlayerHighestGradeInGroup(source, groupName)
+    if not groupName or groupName == '' then return false end
+    local factions = getPlayerBossFactions(source)
+    for i = 1, #factions do
+        if factions[i].name == groupName then
+            return true
+        end
+    end
+    return false
+end
+
 local function chargePlayer(player, amount, payType, accountId)
     amount = math.floor(tonumber(amount) or 0)
 
@@ -227,7 +269,7 @@ local function chargePlayer(player, amount, payType, accountId)
         end
 
         if not allowed then
-            return false, 'K tomuto účtu nemáš oprávnění manažera/majitele.'
+            return false, 'K tomuto účtu nemáš oprávnění pro platbu.'
         end
 
         local account = Ox.GetAccount(accountId)
@@ -293,27 +335,44 @@ local function saveOwnedVehicle(player, shopId, vehData, plate, colorIndex, spaw
         type = vehData.type or 'car'
     }
 
-    local isFaction = factionGroup and factionGroup ~= ''
-    local ownerValue = isFaction and nil or player.charId
-    local groupValue = isFaction and factionGroup or nil
+    local isFaction = (factionGroup ~= nil and factionGroup ~= '')
     local vin = generateVIN()
-    local storedValue = garageName
+    local storedValue = isFaction and factionGroup or garageName
+    local dbId = nil
 
-    local dbId = MySQL.insert.await([[
-        INSERT INTO `vehicles`
-            (`plate`, `vin`, `owner`, `group`, `model`, `class`, `data`, `stored`, `fr_state`, `fr_vehicle_type`, `fr_fuel`)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, "stored", ?, 100)
-    ]], {
-        plate,
-        vin,
-        ownerValue,
-        groupValue,
-        vehData.model,
-        class,
-        json.encode(vehicleProps),
-        storedValue,
-        vehData.type or 'car'
-    })
+    if isFaction then
+        -- Zápis pro frakci: owner je natvrdo NULL přímo v SQL dotazu
+        dbId = MySQL.insert.await([[
+            INSERT INTO `vehicles`
+                (`plate`, `vin`, `owner`, `group`, `model`, `class`, `data`, `stored`, `fr_state`, `fr_vehicle_type`, `fr_fuel`)
+            VALUES (?, ?, NULL, ?, ?, ?, ?, ?, "stored", ?, 100)
+        ]], {
+            plate,
+            vin,
+            factionGroup,
+            vehData.model,
+            class,
+            json.encode(vehicleProps),
+            storedValue,
+            vehData.type or 'car'
+        })
+    else
+        -- Zápis pro osobní vlastnictví: group je natvrdo NULL přímo v SQL dotazu
+        dbId = MySQL.insert.await([[
+            INSERT INTO `vehicles`
+                (`plate`, `vin`, `owner`, `group`, `model`, `class`, `data`, `stored`, `fr_state`, `fr_vehicle_type`, `fr_fuel`)
+            VALUES (?, ?, ?, NULL, ?, ?, ?, ?, "stored", ?, 100)
+        ]], {
+            plate,
+            vin,
+            player.charId,
+            vehData.model,
+            class,
+            json.encode(vehicleProps),
+            storedValue,
+            vehData.type or 'car'
+        })
+    end
 
     local netId = nil
     if spawnNow and spawnCoords then
@@ -327,31 +386,35 @@ local function saveOwnedVehicle(player, shopId, vehData, plate, colorIndex, spaw
     return dbId, netId
 end
 
-local function giveVehicleKey(source, plate, modelLabel)
-    -- 1. Náš nový systém klíčů přes itemy (dá 2 klíče přímo na serveru)
-    if Config.KeysExport.enabled then
-        local res = Config.KeysExport.resource
-        local exp = Config.KeysExport.export
-        local count = Config.KeysExport.count or 2
+local function formatPlate(plate)
+    if not plate then return '' end
+    return string.gsub(plate, '^%s*(.-)%s*$', '%1')
+end
 
-        if res and exp and GetResourceState(res) == 'started' then
-            for i = 1, count do
-                exports[res][exp](source, plate, modelLabel)
-            end
-            return true
+local function giveVehicleKey(source, plate, modelLabel)
+    local cleanPlate = formatPlate(plate)
+    local labelModel = modelLabel or 'Vozidlo'
+    local count = (Config.KeysExport and Config.KeysExport.count) or 2
+
+    local metadata = {
+        plate = cleanPlate,
+        model = labelModel,
+        description = ('SPZ: %s  \nModel: %s'):format(cleanPlate, labelModel)
+    }
+
+    -- Přidáme klíče přímo přes ox_inventory (2x samostatný item se stejnou SPZ)
+    local allSuccess = true
+    for i = 1, count do
+        local success, response = exports.ox_inventory:AddItem(source, 'carkey', 1, metadata)
+        if not success then
+            allSuccess = false
+            print(('^1[fr_vehicleshop] CHYBA: Nepodařilo se dát carkey hráči %s! Důvod z ox_inventory: %s^7'):format(source, tostring(response)))
+        else
+            print(('^2[fr_vehicleshop] Klíč #%d [%s] úspěšně přidán hráči %s.^7'):format(i, cleanPlate, source))
         end
     end
 
-    -- 2. Fallback na fr_garage, pokud bys někdy vypnul Config.KeysExport
-    if GetResourceState('fr_garage') == 'started' then
-        local ok, gave = pcall(function()
-            return exports.fr_garage:GiveKey(source, plate)
-        end)
-
-        if ok and gave then return true end
-    end
-
-    return false
+    return allSuccess
 end
 
 local function countOwnedVehicles(charId)
@@ -364,6 +427,10 @@ end)
 
 lib.callback.register('fr_vehicleshop:getFactionAccounts', function(source)
     return getFactionAccounts(source)
+end)
+
+lib.callback.register('fr_vehicleshop:getPlayerFactions', function(source)
+    return getPlayerBossFactions(source)
 end)
 
 lib.callback.register('fr_vehicleshop:requestTestDrive', function(source, payload)
@@ -395,31 +462,52 @@ end)
 
 lib.callback.register('fr_vehicleshop:buyVehicle', function(source, payload)
     local player = Ox.GetPlayer(source)
-    if type(payload) ~= 'table' then return { ok = false, message = 'Neplatny pozadavek.' } end
+    if type(payload) ~= 'table' then return { ok = false, message = 'Neplatný požadavek.' } end
     if not player then return { ok = false, message = 'Hráč nebyl nalezen.' } end
 
     local shop = getShop(payload.shopId)
     local veh = shop and getVehicleFromShop(shop, payload.model) or nil
     local color = tonumber(payload.color)
     local payType = tostring(payload.payType or '')
+    local buyType = tostring(payload.buyType or 'osobni')
     local accountId = tonumber(payload.accountId)
     local factionGroup = payload.factionGroup
-    
 
     if not shop or not veh then return { ok = false, message = 'Neplatný výběr vozidla.' } end
     if not Config.ColorOptions[color or -1] then return { ok = false, message = 'Neplatná barva.' } end
     if payType ~= 'cash' and payType ~= 'bank' and payType ~= 'faction' then return { ok = false, message = 'Neplatný typ platby.' } end
+    if buyType ~= 'osobni' and buyType ~= 'frakce' then return { ok = false, message = 'Neplatný typ vlastnictví.' } end
 
-    if payType == 'faction' and not shop.allowSociety then
-        return { ok = false, message = 'V tomto autosalonu nelze nakupovat na frakci.' }
+    local isFactionPurchase = (buyType == 'frakce')
+
+    if isFactionPurchase then
+        if not shop.allowSociety then
+            return { ok = false, message = 'V tomto autosalonu nelze nakupovat vozidla na frakci.' }
+        end
+
+        if not factionGroup or factionGroup == '' then
+            return { ok = false, message = 'Nebyla vybrána žádná frakce.' }
+        end
+
+        if shop.societyJobs and #shop.societyJobs > 0 and not Utils.TableContains(shop.societyJobs, factionGroup) then
+            return { ok = false, message = 'Tvoje frakce v tomto autosalonu nemůže nakupovat.' }
+        end
+
+        -- Kontrola, že hráč má v dané frakci nejvyšší hodnost (MAX grade v ox_group_grades)
+        if not isPlayerHighestGradeInGroup(source, factionGroup) then
+            return { ok = false, message = 'Nákup na frakci může provést pouze nejvyšší vedení frakce!' }
+        end
+    else
+        -- Pojistka: při osobním nákupu musí být factionGroup vždy nil
+        factionGroup = nil
+
+        if countOwnedVehicles(player.charId) >= Config.MaxOwnedVehiclesPerPlayer then
+            return { ok = false, message = 'Dosáhl jsi limitu osobních vozidel.' }
+        end
     end
 
     if shop.licenseRequired and not hasLicense(source, shop.licenseRequired) then
         return { ok = false, message = 'Nemáš potřebnou licenci.' }
-    end
-
-    if payType ~= 'faction' and countOwnedVehicles(player.charId) >= Config.MaxOwnedVehiclesPerPlayer then
-        return { ok = false, message = 'Dosáhl jsi limitu osobních vozidel.' }
     end
 
     local paid, reason = chargePlayer(player, veh.price, payType, accountId)
@@ -434,14 +522,13 @@ lib.callback.register('fr_vehicleshop:buyVehicle', function(source, payload)
     -- Předáme source, SPZ a label vozidla (dá hráči 2x item klíče s metadaty)
     giveVehicleKey(source, plate, veh.label)
 
-    local charName = player.get('firstName') .. ' ' .. player.get('lastName')
-    local isFaction = payType == 'faction' and factionGroup and factionGroup ~= ''
-    local logType = isFaction and ('Frakce: ' .. tostring(factionGroup)) or payType
-    logDiscord(('%s koupil %s za $%s [%s], SPZ: %s'):format(charName, veh.label, veh.price, logType, plate), source, 65280, 'vehicle_shop')
+    local charName = (player.get('firstName') or '') .. ' ' .. (player.get('lastName') or '')
+    local logType = isFactionPurchase and ('Frakce: ' .. tostring(factionGroup) .. ' | Platba: ' .. payType) or payType
+    --logDiscord(('%s koupil %s za $%s [%s], SPZ: %s'):format(charName, veh.label, veh.price, logType, plate), source, 65280, 'vehicle_shop')
 
     return {
         ok = true,
-        message = ('Zakoupeno: %s | SPZ %s %s'):format(veh.label, plate, isFaction and ('(Frakce: ' .. factionGroup .. ')') or ''),
+        message = ('Zakoupeno: %s | SPZ %s %s'):format(veh.label, plate, isFactionPurchase and ('(Frakce: ' .. factionGroup .. ')') or ''),
         plate = plate,
         spawnNow = spawnNow,
         netId = netId

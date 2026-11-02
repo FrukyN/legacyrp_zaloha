@@ -10,7 +10,6 @@ local function fetchJobCounts()
         if inService then
             counts[inService] = (counts[inService] or 0) + 1
         end
-
     end
     return counts
 end

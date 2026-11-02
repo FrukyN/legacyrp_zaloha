@@ -170,7 +170,7 @@ local function buildCard(state, points, queuePos, queueTotal, timeVal)
         and "Místo na serveru je připraveno! Můžeš vstoupit do hry."
         or "Server je momentálně plný, čekáš ve frontě..."
 
-    local timeLabel = (state == "READY") and "⏳ Automatické připojení za:" or "⏳ Čas ve frontě:"
+    local timeLabel = (state == "READY") and "Automatické připojení za:" or "Čas ve frontě:"
     local timeValue = (state == "READY") and (tostring(timeVal) .. "s") or formatTime(timeVal)
     local frontCountText = (state == "READY") and "Připraven ke vstupu" or
     string.format("%d / %d", queuePos or 1, queueTotal or 1)

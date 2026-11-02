@@ -112,49 +112,6 @@ local function selectBankAccount()
     return tonumber(input[1])
 end
 
--- Výběr frakčního účtu pro platbu
-local function selectFactionAccount()
-    local accounts = lib.callback.await('fr_vehicleshop:getFactionAccounts', false)
-
-    if not accounts or #accounts == 0 then
-        notify('Nemáš roli Majitele nebo Manažera v žádné frakci s přístupem k financím.', 'error')
-        return nil, nil
-    end
-
-    local options = {}
-    for i = 1, #accounts do
-        local acc = accounts[i]
-        options[#options + 1] = {
-            value = tostring(acc.id),
-            label = ('%s - $%s'):format(acc.label, groupDigits(acc.balance))
-        }
-    end
-
-    local input = lib.inputDialog('Nákup na frakci', {
-        {
-            type = 'select',
-            label = 'Frakční účet',
-            options = options,
-            default = tostring(accounts[1].id),
-            required = true
-        }
-    })
-
-    if not input then return nil, nil end
-
-    local selectedId = tonumber(input[1])
-    local selectedGroup = nil
-
-    for i = 1, #accounts do
-        if accounts[i].id == selectedId then
-            selectedGroup = accounts[i].group
-            break
-        end
-    end
-
-    return selectedId, selectedGroup
-end
-
 local openPurchaseMenu
 
 local function buildVehicleList(shopId, shop, category)
@@ -367,6 +324,37 @@ local function buildFilteredVehicleList(shopId, shop, filters)
     return options
 end
 
+local function selectPlayerFaction()
+    local factions = lib.callback.await('fr_vehicleshop:getPlayerFactions', false)
+
+    if not factions or #factions == 0 then
+        notify('Nejsi ve vedení žádné frakce (vyžadována nejvyšší hodnost).', 'error')
+        return nil
+    end
+
+    -- Pokud má hráč nejvyšší hodnost jen v jedné frakci, rovnou ji vybereme (nebo můžeš nechat dialog vždy)
+    local options = {}
+    for i = 1, #factions do
+        options[#options + 1] = {
+            value = factions[i].name,
+            label = ('%s (%s)'):format(factions[i].label, factions[i].gradeLabel or 'Vedení')
+        }
+    end
+
+    local input = lib.inputDialog('Výběr frakce pro registraci vozidla', {
+        {
+            type = 'select',
+            label = 'Frakce',
+            options = options,
+            default = options[1].value,
+            required = true
+        }
+    })
+
+    if not input then return nil end
+    return input[1]
+end
+
 function openPurchaseMenu(shopId, shop, veh, categoryKey)
     state.inDialog = true
 
@@ -375,8 +363,13 @@ function openPurchaseMenu(shopId, shop, veh, categoryKey)
         { value = 'bank', label = 'Banka (Karta)' }
     }
 
+    local buyOptions = {
+        { value = 'osobni', label = 'Osobní vlastnictví' } -- do databaze se zapisuje pod owner, group je null
+    }
+
+    -- Možnost koupit na frakci zobrazíme jen pokud to obchod v configu povoluje
     if shop.allowSociety then
-        payOptions[#payOptions + 1] = { value = 'faction', label = 'Frakční účet (Společnost)' }
+        buyOptions[#buyOptions + 1] = { value = 'frakce', label = 'Frakční vlastnictví' } -- do databaze se zapisuje pod group, owner je null
     end
 
     local input = lib.inputDialog(('Koupě: %s'):format(veh.label), {
@@ -385,6 +378,13 @@ function openPurchaseMenu(shopId, shop, veh, categoryKey)
             label = 'Způsob platby',
             options = payOptions,
             default = 'bank',
+            required = true
+        },
+        {
+            type = 'select',
+            label = 'Možnosti koupě',
+            options = buyOptions,
+            default = 'osobni',
             required = true
         },
     })
@@ -400,24 +400,29 @@ function openPurchaseMenu(shopId, shop, veh, categoryKey)
     end
 
     local payType = input[1]
+    local buyType = input[2]
     local accountId = nil
     local factionGroup = nil
 
+    -- 1. Pokud kupuje na frakci, vybere frakci (kde má nejvyšší grade)
+    if buyType == 'frakce' then
+        state.inDialog = true
+        factionGroup = selectPlayerFaction()
+        state.inDialog = false
+
+        if not factionGroup then
+            lib.showContext(backMenuId)
+            return
+        end
+    end
+
+    -- 2. Pokud platí bankou, vybere účet (svůj osobní nebo frakční, ke kterému má přístup)
     if payType == 'bank' then
         state.inDialog = true
         accountId = selectBankAccount()
         state.inDialog = false
 
         if not accountId then
-            lib.showContext(backMenuId)
-            return
-        end
-    elseif payType == 'faction' then
-        state.inDialog = true
-        accountId, factionGroup = selectFactionAccount()
-        state.inDialog = false
-
-        if not accountId or not factionGroup then
             lib.showContext(backMenuId)
             return
         end
@@ -434,23 +439,22 @@ function openPurchaseMenu(shopId, shop, veh, categoryKey)
 
         if response.spawnNow and response.netId then
             local ped = PlayerPedId()
-            local vehicle = NetToVeh(response.netId)
+            
+            local vehicle = lib.waitFor(function()
+                if NetworkDoesNetworkIdExist(response.netId) then
+                    local vehEntity = NetToVeh(response.netId)
+                    if DoesEntityExist(vehEntity) then
+                        return vehEntity
+                    end
+                end
+            end, 'Nepodařilo se načíst zakoupené vozidlo včas', 5000)
 
-            local timeout = 50
-            while not DoesEntityExist(vehicle) and timeout > 0 do
-                Wait(100)
-                vehicle = NetToVeh(response.netId)
-                timeout = timeout - 1
-            end
-
-if DoesEntityExist(vehicle) then
+            if vehicle and DoesEntityExist(vehicle) then
                 SetPedIntoVehicle(ped, vehicle, -1)
                 SetVehicleNumberPlateText(vehicle, response.plate)
                 local colorData = Config.ColorOptions[state.previewColor] or Config.ColorOptions[1]
                 SetVehicleColours(vehicle, colorData.primary, colorData.secondary)
             end
-
-            -- giveKeys(response.plate) <-- TENTO ŘÁDEK SMAŽ, klíče už dává server!
         else
             notify('Spawn byl obsazen, vozidlo bylo uloženo do garáže.', 'inform')
         end
@@ -462,6 +466,7 @@ if DoesEntityExist(vehicle) then
         model = veh.model,
         color = state.previewColor,
         payType = payType,
+        buyType = buyType,
         accountId = accountId,
         factionGroup = factionGroup,
         class = GetVehicleClassFromName(joaat(veh.model))

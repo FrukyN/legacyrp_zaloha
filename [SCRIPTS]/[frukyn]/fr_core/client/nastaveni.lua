@@ -40,7 +40,7 @@ lib.registerRadial({
 
         {
             label = 'Bindmenu',
-            icon = 'user',
+            icon = 'keyboard',
             onSelect = function()
                 ExecuteCommand('bindmenu')
             end
@@ -48,7 +48,7 @@ lib.registerRadial({
 
         {
             label = 'Streamer mód',
-            icon = 'user',
+            icon = 'video',
             onSelect = function()
                 ExecuteCommand('streamermode')
             end

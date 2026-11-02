@@ -64,7 +64,6 @@ end
 local function getCharacterName(player, source)
     if not player then return GetPlayerName(source) end
 
-    if wx.OnlyInicials then
         local firstName
         local lastName
 
@@ -86,7 +85,6 @@ local function getCharacterName(player, source)
         if firstName and lastName then
             return string.sub(firstName, 1, 1) .. '. ' .. string.sub(lastName, 1, 1) .. '. '
         end
-    end
 
     if player.getName then
         return player.getName()

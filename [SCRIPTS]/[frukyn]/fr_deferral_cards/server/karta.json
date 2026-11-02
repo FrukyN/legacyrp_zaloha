@@ -37,7 +37,7 @@
                             "items": [
                                 {
                                     "type": "TextBlock",
-                                    "text": "👥 Hráči online:",
+                                    "text": "Hráči online:",
                                     "weight": "Bolder",
                                     "size": "Medium"
                                 },
@@ -69,7 +69,7 @@
                             "items": [
                                 {
                                     "type": "TextBlock",
-                                    "text": "⭐ Počet bodů:",
+                                    "text": "Počet bodů:",
                                     "weight": "Bolder",
                                     "size": "Medium"
                                 },
@@ -81,7 +81,7 @@
                                 },
                                 {
                                     "type": "TextBlock",
-                                    "text": "🚶 Pozice ve frontě:",
+                                    "text": "Pozice ve frontě:",
                                     "weight": "Bolder",
                                     "size": "Medium",
                                     "spacing": "Medium"

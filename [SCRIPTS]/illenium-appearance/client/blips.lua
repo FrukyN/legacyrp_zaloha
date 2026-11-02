@@ -22,7 +22,7 @@ local function CreateBlip(blipConfig, coords)
     SetBlipScale(blip, blipConfig.Scale)
     SetBlipAsShortRange(blip, true)
     BeginTextCommandSetBlipName("STRING")
-    AddTextComponentString(blipConfig.Name)
+    AddTextComponentString("<font face='ChakraPetch-Regular'>"..blipConfig.Name.."</font>")
     EndTextCommandSetBlipName(blip)
     return blip
 end
