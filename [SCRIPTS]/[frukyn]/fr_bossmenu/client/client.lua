@@ -11,11 +11,27 @@ local function groupDigits(value)
     return left .. (num:reverse():gsub('(%d%d%d)', '%1 '):reverse()) .. right
 end
 
-local function getPlayerJob()
+local CurrentBossJob = nil
+
+local function getPlayerJob(forcedJobName)
     local player = Ox.GetPlayer()
     if not player then return nil end
 
+    local targetJob = forcedJobName or CurrentBossJob
+    if targetJob and player.getGroup then
+        local grade = player.getGroup(targetJob)
+        if grade then
+            return {
+                name = targetJob,
+                grade = tonumber(grade) or 0
+            }
+        end
+    end
+
     local jobName, grade = player.getGroupByType and player.getGroupByType('job')
+    if type(jobName) == 'table' then
+        for k, v in pairs(jobName) do jobName, grade = k, v break end
+    end
     if not jobName then return nil end
 
     return {
@@ -26,8 +42,7 @@ end
 
 local function canUseBossMenu(jobName, grade)
     local cfg = Config.Jobs[jobName]
-    if not cfg then return false end
-    local minGrade = (cfg.target and cfg.target.minGrade) or 0
+    local minGrade = (cfg and cfg.target and cfg.target.minGrade) or 0
     return (grade or 0) >= minGrade
 end
 
@@ -431,7 +446,7 @@ local function openOrdersMenu()
 end
 
 function OpenBossMenu()
-    local dashboard = lib.callback.await('bossmenu:server:getDashboard', false)
+    local dashboard = lib.callback.await('bossmenu:server:getDashboard', false, CurrentBossJob, Config.Jobs[CurrentBossJob])
     if not dashboard then
         notify('error', 'Nemáš přístup k boss menu.')
         return
@@ -588,10 +603,22 @@ CreateThread(function()
     end
 end)
 
-exports('OpenBossMenu', function()
-    local job = getPlayerJob()
+exports('OpenBossMenu', function(jobName, customData)
+    if jobName then
+        CurrentBossJob = jobName
+        -- Dynamické uložení do Config.Jobs v paměti, aniž bys musel cokoliv psát do config.lua
+        if not Config.Jobs[jobName] then
+            Config.Jobs[jobName] = {
+                label = (customData and customData.label) or jobName,
+                target = { minGrade = (customData and customData.minGrade) or 0 },
+                stash = customData and customData.stash or nil
+            }
+        end
+    end
+
+    local job = getPlayerJob(jobName)
     if not job then
-        notify('error', 'Nemáš žádnou práci.')
+        notify('error', 'Nemáš tuto práci.')
         return false
     end
 

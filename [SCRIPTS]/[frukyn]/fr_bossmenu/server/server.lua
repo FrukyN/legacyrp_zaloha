@@ -14,12 +14,35 @@ local function hasLength(str, maxLen)
     return type(str) == 'string' and #str > 0 and #str <= maxLen
 end
 
+local ActiveBossSession = {} -- Ukládá, jakou práci hráč zrovna otevřel přes unijob
+
 local function getJobConfig(jobName)
+    if not Config.Jobs[jobName] then
+        -- Automatický fallback, pokud práce není v config.lua
+        Config.Jobs[jobName] = {
+            label = jobName,
+            target = { minGrade = 0 }
+        }
+    end
     return Config.Jobs[jobName]
 end
 
-local function getPlayerJob(player)
+local function getPlayerJob(player, forcedJobName)
     if not player then return nil end
+
+    local targetJob = forcedJobName or ActiveBossSession[player.source]
+    if targetJob and player.getGroup then
+        local grade = player.getGroup(targetJob)
+        if grade then
+            local cfg = getJobConfig(targetJob)
+            return {
+                name = targetJob,
+                grade = math.max((tonumber(grade) or 0), 0),
+                label = (cfg and cfg.label) or targetJob
+            }
+        end
+    end
+
     local jobName, grade = player.getGroupByType and player.getGroupByType('job')
     if type(jobName) == 'table' then 
         for k, v in pairs(jobName) do jobName, grade = k, v break end 
@@ -27,7 +50,7 @@ local function getPlayerJob(player)
     if not jobName then return nil end
 
     local cfg = getJobConfig(jobName)
-    local normalizedGrade = math.max((tonumber(grade) or 1), 0)
+    local normalizedGrade = math.max((tonumber(grade) or 0), 0)
     return {
         name = jobName,
         grade = normalizedGrade,
@@ -341,8 +364,15 @@ lib.callback.register('bossmenu:server:getBankAccounts', function(source)
     return getBankAccounts(source)
 end)
 
-lib.callback.register('bossmenu:server:getDashboard', function(source)
-    local xPlayer, job, err = requireBoss(source, Config.Grades.Finance, 'get_dashboard')
+lib.callback.register('bossmenu:server:getDashboard', function(source, jobName, customCfg)
+    if jobName then
+        ActiveBossSession[source] = jobName
+        if customCfg and not Config.Jobs[jobName] then
+            Config.Jobs[jobName] = customCfg
+        end
+    end
+
+    local xPlayer, job, err = requireBoss(source, nil, 'get_dashboard')
     if err then return nil end
     local online, total = getOnlineAndTotal(job.name)
     local top = getWeekTopEmployee(job.name)

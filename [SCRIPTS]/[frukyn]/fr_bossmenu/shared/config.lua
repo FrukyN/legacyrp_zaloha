@@ -46,4 +46,24 @@ Config.Jobs = {
             }
         }
     },
+    --[[
+   
+    hayes = {
+        label = 'Hayes Auto',
+        target = {
+            -- coords zde nemusí být, pokud otevíráš menu přes unijob target
+            minGrade = 0
+        },
+        stash = {
+            id = 'society_hayes_stash',
+            label = 'Hayes Sklad',
+            slots = 100,
+            weight = 500000
+        },
+        materialsOrder = {
+            enabled = false,
+            items = {}
+        }
+    }
+    ]]
 }

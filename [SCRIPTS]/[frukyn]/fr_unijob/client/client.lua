@@ -99,7 +99,7 @@ CreateThread(function()
                 })
             end
         end
-        -- Boss Menu (propojeno přes nový export)
+-- Boss Menu (propojeno přes nový export)
         if jobData.bossmenu then
             exports.ox_target:addSphereZone({
                 coords = jobData.bossmenu.coords,
@@ -109,9 +109,13 @@ CreateThread(function()
                         name = ('bossmenu_%s'):format(jobName),
                         icon = 'fa-solid fa-briefcase',
                         label = 'Otevřít Boss Menu (' .. jobData.label .. ')',
-                        groups = { [jobName] = jobData.bossmenu.minGrade or 1 },
+                        groups = { [jobName] = jobData.bossmenu.minGrade or 0 },
                         onSelect = function()
-                            exports.fr_bossmenu:OpenBossMenu() -- Zavolání našeho nového exportu
+                            exports.fr_bossmenu:OpenBossMenu(jobName, {
+                                label = jobData.label,
+                                minGrade = jobData.bossmenu.minGrade or 0,
+                                stash = jobData.stashes and jobData.stashes[1] or nil
+                            })
                         end
                     }
                 }
