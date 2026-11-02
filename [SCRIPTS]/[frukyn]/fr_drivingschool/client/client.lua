@@ -26,14 +26,12 @@ CreateThread(function()
     })
 end)
 
--- 1. HLAVNÍ MENU AUTOŠKOLY
 function OpenAutoskolaMenu()
     local ownedLicenses = lib.callback.await('autoskola:getOwnedLicenses', false) or {}
     local accounts = lib.callback.await('autoskola:getBankAccounts', false) or {}
 
     local options = {}
 
-    -- Seřazení klíčů, aby byly skupiny v menu vždy ve stejném pořadí (A, B, ...)
     local keys = {}
     for k in pairs(Config.Licenses) do
         keys[#keys + 1] = k
@@ -273,6 +271,10 @@ function StartDriveTest(type)
         Config.VehicleSpawn.w, true, false)
     TaskWarpPedIntoVehicle(cache.ped, testVehicle, -1)
 
+    -- >>> PŘEDÁNÍ KLÍČE HRÁČI <<<
+    local vehPlate = GetVehicleNumberPlateText(testVehicle)
+    TriggerServerEvent('fr_carkeys:server:giveKeyClient', vehPlate, 'Autoškola (' .. type .. ')')
+
     lib.requestModel('ig_bankman')
     instructorPed = CreatePedInsideVehicle(testVehicle, 4, GetHashKey('ig_bankman'), 0, true, false)
 
@@ -332,8 +334,17 @@ function PassDriveTest(type)
 end
 
 function CleanupTest()
-    if DoesEntityExist(instructorPed) then DeleteEntity(instructorPed) end
-    if DoesEntityExist(testVehicle) then DeleteEntity(testVehicle) end
+    if DoesEntityExist(instructorPed) then 
+        DeleteEntity(instructorPed) 
+    end
+
+    -- >>> ODEBRÁNÍ KLÍČE PŘED SMAZÁNÍM AUTA <<<
+    if DoesEntityExist(testVehicle) then 
+        local vehPlate = GetVehicleNumberPlateText(testVehicle)
+        TriggerServerEvent('fr_carkeys:server:removeKeyClient', vehPlate)
+        DeleteEntity(testVehicle) 
+    end
+
     SetEntityCoords(cache.ped, Config.Location.x, Config.Location.y, Config.Location.z)
 end
 

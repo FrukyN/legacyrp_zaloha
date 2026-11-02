@@ -178,3 +178,47 @@ AddEventHandler('entityCreated', function(entity)
         SetVehicleDoorsLocked(entity, 1)
     end
 end)
+
+-- Export pro smazání klíče z inventáře hráče podle SPZ
+local function removeCarKey(source, plate, amount)
+    if not source or not plate then return false end
+
+    local cleanPlate = formatPlate(plate)
+    local amountToRemove = amount or 1
+
+    -- Vyhledá v ox_inventory konkrétní sloty obsahující klíč s danou SPZ
+    local matchedKeys = exports.ox_inventory:Search(source, 'slots', Config.KeyItem, { plate = cleanPlate })
+    if not matchedKeys or #matchedKeys == 0 then 
+        return false 
+    end
+
+    local removed = 0
+    for _, item in ipairs(matchedKeys) do
+        if removed >= amountToRemove then break end
+
+        local countInSlot = item.count or 1
+        local take = math.min(countInSlot, amountToRemove - removed)
+
+        -- Odebere přesně z daného slotu
+        if exports.ox_inventory:RemoveItem(source, Config.KeyItem, take, nil, item.slot) then
+            removed = removed + take
+        end
+    end
+
+    return removed > 0
+end
+exports('RemoveCarKey', removeCarKey)
+
+-- Přidání klíče z klientských scriptů (např. autoškola, půjčovna)
+RegisterNetEvent('fr_carkeys:server:giveKeyClient', function(plate, modelName)
+    local src = source
+    if not plate then return end
+    giveCarKey(src, plate, modelName or 'Autoškola')
+end)
+
+-- Odebrání klíče z klientských scriptů
+RegisterNetEvent('fr_carkeys:server:removeKeyClient', function(plate)
+    local src = source
+    if not plate then return end
+    removeCarKey(src, plate, 1)
+end)
