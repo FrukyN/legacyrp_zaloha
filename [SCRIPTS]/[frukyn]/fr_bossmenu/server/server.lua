@@ -817,3 +817,21 @@ AddEventHandler('onResourceStart', function(resourceName)
     Wait(500)
     registerStashes()
 end)
+
+exports('RegisterJob', function(jobName, jobConfig)
+    if not jobName or not jobConfig then return end
+    Config.Jobs[jobName] = jobConfig
+
+    if jobConfig.stash and jobConfig.stash.id then
+        exports.ox_inventory:RegisterStash(
+            jobConfig.stash.id,
+            jobConfig.stash.label or ('%s Stash'):format(jobName),
+            jobConfig.stash.slots or 100,
+            jobConfig.stash.weight or 500000,
+            false,
+            { [jobName] = (jobConfig.target and jobConfig.target.minGrade) or 0 }
+        )
+    end
+
+    ensureSocietyAccount(jobName)
+end)

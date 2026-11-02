@@ -24,6 +24,17 @@ AddEventHandler('onResourceStart', function(resourceName)
                 )
             end
         end
+        -- Automatická registrace bossmenu dat z unijobu do fr_bossmenu
+        if jobData.bossmenu then
+            pcall(function()
+                exports.fr_bossmenu:RegisterJob(jobName, {
+                    label = jobData.label,
+                    target = { minGrade = jobData.bossmenu.minGrade or 0 },
+                    stash = jobData.bossmenu.stash or (jobData.stashes and jobData.stashes[1]) or nil,
+                    materialsOrder = jobData.bossmenu.materialsOrder
+                })
+            end)
+        end
     end
 end)
 

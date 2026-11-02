@@ -78,7 +78,21 @@ Config.Jobs = {
         },
         bossmenu = {
             coords = vec3(472.2060, -1310.8534, 29.2185),
-            minGrade = 0
+            minGrade = 0,
+            stash = {
+                id = 'society_hayes_stash',
+                label = 'Hayes Firemní Sklad',
+                slots = 180,
+                weight = 500000
+            },
+            materialsOrder = {
+                enabled = true,
+                deliverySeconds = 900,
+                items = {
+                    { item = 'repairkit', label = 'Repair Kit', price = 400 },
+                    { item = 'water', label = 'Voda', price = 25 }
+                }
+            }
         },
         stashes = {
             {

@@ -606,12 +606,12 @@ end)
 exports('OpenBossMenu', function(jobName, customData)
     if jobName then
         CurrentBossJob = jobName
-        -- Dynamické uložení do Config.Jobs v paměti, aniž bys musel cokoliv psát do config.lua
-        if not Config.Jobs[jobName] then
+        if customData then
             Config.Jobs[jobName] = {
-                label = (customData and customData.label) or jobName,
-                target = { minGrade = (customData and customData.minGrade) or 0 },
-                stash = customData and customData.stash or nil
+                label = customData.label or jobName,
+                target = { minGrade = customData.minGrade or 0 },
+                stash = customData.stash or nil,
+                materialsOrder = customData.materialsOrder or nil
             }
         end
     end

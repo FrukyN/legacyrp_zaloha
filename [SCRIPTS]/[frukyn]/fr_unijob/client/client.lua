@@ -114,7 +114,8 @@ CreateThread(function()
                             exports.fr_bossmenu:OpenBossMenu(jobName, {
                                 label = jobData.label,
                                 minGrade = jobData.bossmenu.minGrade or 0,
-                                stash = jobData.stashes and jobData.stashes[1] or nil
+                                stash = jobData.bossmenu.stash or (jobData.stashes and jobData.stashes[1]) or nil,
+                                materialsOrder = jobData.bossmenu.materialsOrder
                             })
                         end
                     }
