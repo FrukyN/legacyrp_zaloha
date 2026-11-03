@@ -61,14 +61,12 @@ RegisterNetEvent('fr_multicharacter:enrichCharacters', function(charList)
 
     for _, char in ipairs(charList) do
         if char.charId then
-            -- 1. Získání data narození a pohlaví z databáze
             local charRes = MySQL.single.await('SELECT DATE_FORMAT(`dateOfBirth`, "%d.%m.%Y") AS `dateOfBirth`, `gender` FROM `characters` WHERE `charId` = ?', { char.charId })
             if charRes then
                 char.date = charRes.dateOfBirth or char.date
                 char.gender = charRes.gender or char.gender
             end
 
-            -- 2. Získání práce (frakcí) z databáze
             local groupsRes = MySQL.query.await('SELECT `name` FROM `character_groups` WHERE `charId` = ?', { char.charId })
             if groupsRes and #groupsRes > 0 then
                 char.groups = {}
@@ -77,7 +75,6 @@ RegisterNetEvent('fr_multicharacter:enrichCharacters', function(charList)
                 end
             end
 
-            -- 3. Získání vzhledu z illenium-appearance (tabulka playerskins)
             local skinRes = MySQL.single.await('SELECT `skin` FROM `playerskins` WHERE `citizenid` = ? OR `citizenid` = ? ORDER BY `active` DESC LIMIT 1', {
                 tostring(char.charId),
                 tostring(char.stateId or char.charId)

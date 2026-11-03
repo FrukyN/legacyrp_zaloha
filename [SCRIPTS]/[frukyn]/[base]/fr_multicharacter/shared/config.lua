@@ -6,7 +6,6 @@ Config.newCharacterSpawn = vec3(243.7077, -880.3877, 30.4919)
 Config.newCharacterHeading = 301.7720
 
 Config.preview = {
-    -- Postava stojí v chodbě před kamerou a dívá se směrem do kamery (heading 56.74)
     pedCoords = vec4(-1569.2500, -3227.5200, 26.3362, 56.7415),
     cameraPos = vec3(-1571.3068, -3226.1580, 26.3362),
     cameraLookAt = vec3(-1569.2500, -3227.5200, 26.3362)

@@ -2,6 +2,7 @@ Config = {}
 
 Config.Debug = false
 Config.MaxNeed = 100
+Config.SaveInterval = 120000
 Config.ServerTick = 10000
 Config.SpoilageCheckInterval = 300000
 Config.ConsumptionCooldownMs = 1200

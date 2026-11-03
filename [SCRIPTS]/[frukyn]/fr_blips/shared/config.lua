@@ -5,7 +5,7 @@ Config.UpdateInterval = 15000
 Config.Blips = {
     {
         name = "Autoškola",
-        coords = vec3(215.0, -810.0, 30.0),
+        coords = vec3(223.2037, 373.0146, 106.3730),
         sprite = 545,
         color = 38,
         scale = 0.8,

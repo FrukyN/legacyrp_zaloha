@@ -332,7 +332,6 @@ local function selectPlayerFaction()
         return nil
     end
 
-    -- Pokud má hráč nejvyšší hodnost jen v jedné frakci, rovnou ji vybereme (nebo můžeš nechat dialog vždy)
     local options = {}
     for i = 1, #factions do
         options[#options + 1] = {

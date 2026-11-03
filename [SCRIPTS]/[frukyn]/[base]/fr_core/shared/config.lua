@@ -5,11 +5,7 @@ Config.DisableVehicleRewards = true
 Config.DisableNPCDrops = true
 Config.DisableAimAssist = true
 Config.DisableDisplayAmmo = true
-
 Config.DisableAirControl = true
-Config.TrafficDensity = 0.0
-Config.PedDensity = 0.0
-
 Config.DisableDispatchServices = true
 Config.DisableScenarios = true
 Config.DisableAudioScenes = true
@@ -19,6 +15,9 @@ Config.DisableFlightMusic = true
 Config.DisablePlayerCover = true
 Config.DisableRandomEvents = true
 Config.DisableDeepOceanWaves = true
+
+Config.TrafficDensity = 0.0
+Config.PedDensity = 0.0
 
 Config.RemoveHudComponents = {
     [1] = true,   -- WANTED_STARS

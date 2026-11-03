@@ -262,7 +262,8 @@ function StartDriveTest(type)
     local vehName = Config.Licenses[type].vehicle
 
     if not routeData or #routeData == 0 then
-        lib.notify({ title = 'Chyba', description = 'Pro tuto skupinu není v configu nastavena žádná trasa!', type = 'error' })
+        lib.notify({ title = 'Chyba', description = 'Pro tuto skupinu není v configu nastavena žádná trasa!', type =
+        'error' })
         return
     end
 
@@ -334,15 +335,15 @@ function PassDriveTest(type)
 end
 
 function CleanupTest()
-    if DoesEntityExist(instructorPed) then 
-        DeleteEntity(instructorPed) 
+    if DoesEntityExist(instructorPed) then
+        DeleteEntity(instructorPed)
     end
 
     -- >>> ODEBRÁNÍ KLÍČE PŘED SMAZÁNÍM AUTA <<<
-    if DoesEntityExist(testVehicle) then 
+    if DoesEntityExist(testVehicle) then
         local vehPlate = GetVehicleNumberPlateText(testVehicle)
         TriggerServerEvent('fr_carkeys:server:removeKeyClient', vehPlate)
-        DeleteEntity(testVehicle) 
+        DeleteEntity(testVehicle)
     end
 
     SetEntityCoords(cache.ped, Config.Location.x, Config.Location.y, Config.Location.z)
