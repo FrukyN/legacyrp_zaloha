@@ -1,3 +1,4 @@
+--[[
 local spawn = false
 
 AddEventHandler("playerSpawned", function()
@@ -5,4 +6,4 @@ AddEventHandler("playerSpawned", function()
         ShutdownLoadingScreen()
         spawn = true
     end
-end)
+end)]]

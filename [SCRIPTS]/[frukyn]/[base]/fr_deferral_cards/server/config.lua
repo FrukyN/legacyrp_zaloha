@@ -6,10 +6,10 @@ Config.Discord = {
     RequireDiscord = true
 }
 
-Config.ReservedSlots = 2          -- Počet slotů vyhrazených pouze pro hráče s isReserved = true
-Config.AutoConnectTimeout = 10    -- Počet vteřin na stisknutí tlačítka "Vstoupit do hry", než systém hráče připojí sám
-Config.ConnectingLockTimeout = 90 -- Jak dlouho (v s) držet slot hráči, který už prošel frontou a načítá do hry
-Config.ReconnectCooldown = 5      -- Ochrana proti spamování připojení (vteřiny mezi pokusy o reconnect)
+Config.ReservedSlots = 2
+Config.AutoConnectTimeout = 10
+Config.ConnectingLockTimeout = 90 -- Jak dlouho držet slot hráči, který už prošel frontou a načítá se do hry
+Config.ReconnectCooldown = 5      -- Ochrana proti spamování 
 Config.MaxRapidReconnects = 3     -- Po kolika rychlých reconnectech po sobě dostane hráč penalizaci
 
 Config.Roles = {

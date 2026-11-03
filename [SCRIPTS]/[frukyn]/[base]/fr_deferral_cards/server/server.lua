@@ -1,7 +1,7 @@
-local Queue = {}            -- Pole hráčů čekajících ve frontě
-local ReservedLocks = {}    -- Zámky slotů pro hráče, kteří jsou ve fázi tlačítka "Vstoupit" nebo se načítají do hry
-local ReconnectTracker = {} -- Sledování pokusů o připojení (ochrana proti reconnect spamu)
-local JoinCounter = 0       -- Monotónní počítadlo pro 100% přesné pořadí při shodě bodů
+local Queue = {}
+local ReservedLocks = {}
+local ReconnectTracker = {}
+local JoinCounter = 0
 local RawCardTemplate = nil
 
 CreateThread(function()
@@ -68,7 +68,6 @@ local function fetchDiscordPriority(discordId)
 
             p:resolve({ points = totalPoints, isReserved = hasReserved, rolesFound = true })
         else
-            -- Hráč není na Discordu nebo API vrátilo chybu
             p:resolve({ points = 0, isReserved = false, rolesFound = false })
         end
     end, "GET", "", headers)
@@ -173,7 +172,7 @@ local function buildCard(state, points, queuePos, queueTotal, timeVal)
     local timeLabel = (state == "READY") and "Automatické připojení za:" or "Čas ve frontě:"
     local timeValue = (state == "READY") and (tostring(timeVal) .. "s") or formatTime(timeVal)
     local frontCountText = (state == "READY") and "Připraven ke vstupu" or
-    string.format("%d / %d", queuePos or 1, queueTotal or 1)
+        string.format("%d / %d", queuePos or 1, queueTotal or 1)
 
     local cardString = RawCardTemplate
     cardString = cardString:gsub("{SUBTITLE}", escapeJsonString(subtitle))
@@ -269,7 +268,6 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
     local points = discordData.points
     local isReserved = discordData.isReserved
 
-    -- Zápis hráče
     JoinCounter = JoinCounter + 1
     local playerEntry = {
         source = src,
@@ -277,7 +275,7 @@ AddEventHandler('playerConnecting', function(playerName, setKickReason, deferral
         name = playerName,
         points = points,
         isReserved = isReserved,
-        joinOrder = JoinCounter, 
+        joinOrder = JoinCounter,
         queueStartTime = os.time(),
         state = "QUEUE"
     }

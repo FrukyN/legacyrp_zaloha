@@ -68,7 +68,6 @@ local function getJobLabel(character)
     return 'Nezaměstnaný'
 end
 
--- Pomocná funkce, která postavu vždy umístí před kameru a zviditelní
 local function placePedInPreview()
     if not Config.preview then return end
     local ped = PlayerPedId()
@@ -83,14 +82,12 @@ local function placePedInPreview()
     ClearPedTasksImmediately(ped)
 end
 
--- Načtení vizuálu postavy přes illenium-appearance
 local function previewCharacter(character)
     if not character then return end
 
     if character.appearance and GetResourceState('illenium-appearance') == 'started' then
         exports['illenium-appearance']:setPlayerAppearance(character.appearance)
     else
-        -- Záložní model, pokud postava ještě nemá uložený vzhled v databázi
         local modelName = (character.gender == 'female') and 'mp_f_freemode_01' or 'mp_m_freemode_01'
         local model = joaat(modelName)
         if lib.requestModel(model, 5000) then
@@ -100,12 +97,10 @@ local function previewCharacter(character)
         end
     end
 
-    -- Po změně modelu se vytvoří nový PlayerPedId(), proto ho musíme znovu umístit a zviditelnit
     Wait(50)
     placePedInPreview()
 end
 
--- Nastavení kamery a teleport hráče do místnosti
 local function setupCamera()
     if not Config.preview then return end
 
@@ -120,8 +115,8 @@ local function setupCamera()
         RenderScriptCams(true, false, 0, true, true)
     end
 
-    Wait(500)
-    DoScreenFadeIn(250)
+    Wait(200)
+    --DoScreenFadeIn(250)
 end
 
 local function destroyCamera()
@@ -330,6 +325,10 @@ openSelection = function(charList)
     end
 
     buildAndShowMainMenu()
+    Wait(300)
+    ShutdownLoadingScreenNui()
+    ShutdownLoadingScreen()
+    DoScreenFadeIn(400)
 end
 
 RegisterNetEvent('ox:startCharacterSelect', function(_userId, charList)
