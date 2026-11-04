@@ -1,0 +1,12 @@
+- Hlad, žízeň, stres, alkohol a drogy. 
+- Interaktivní konzumace a vícenásobné použití: Když v inventáři použiješ jídlo/pití, nesní se hned.
+- Přes usingItem hook se zobrazí ox_lib TextUI ([E] Použít | [H] Schovat) 
+- Každé kousnutí sníží durability itemu v inventáři.
+- Systém kažení jídla (Spoilage)
+- Script přes metadata počítá procenta čerstvosti.
+- Když čerstvost klesne na 0 %, item se buď smaže (např. joint), nebo nahradí zkaženou variantou (např. bread -> spoiled_food).   
+- Rozbalování itemů (giveItems): Podporuje kontejnerové itemy – např. beer_crate (basa piv), která po použití zmizí a dá hráči do inventáře 10x beer.  
+- Pítka / Fontánky (ox_target): Možnost rozmístit po mapě místa (SphereZones), kde se hráč může přes target napít a snížit si žízeň i stres.  
+- Negativní efekty (Hladovění, Stres, Absťák):Hladovění/Dehydratace (nad 90): Zvyšuje stres, pouští obrazovkový efekt DeathFailOut a každých 12 vteřin ubírá 4 HP (zastaví se na hranici smrti, takže hráče přímo nezabije, ale nechá ho na minimu HP).  
+- Vysoký stres (nad 70 / 85): Pouští rozmazání obrazovky (Rampage) a třes kamery (DRUNK_SHAKE).  
+- Absťák / Dojezd (Withdrawal): Když má hráč v sobě zbytek alkoholu nebo drog (mezi 1 a 15), roste mu stres a má 8% šanci každých 10 vteřin, že zakopne a spadne na zem (SetPedToRagdoll).   

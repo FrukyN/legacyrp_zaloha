@@ -1,20 +1,10 @@
 local Ox = require '@ox_core.lib.init'
 
-local playerState, consumeCooldown, invalidAttempts, pendingUse = {}, {}, {}, {}
+local playerState, consumeCooldown, pendingUse = {}, {}, {}
 
 local statusNames = { 'hunger', 'thirst', 'stress', 'alcohol', 'drug' }
 
-local function banPlayer(src, reason, details)
-    if GetResourceState('ElectronAC') == 'started' then exports['ElectronAC']:banPlayer(src, reason, details or '{}', true) else DropPlayer(src, reason) end
-end
-
-local function clamp(value) return math.max(0, math.min(Config.MaxNeed, math.floor(value))) end
 local function nowTs() return os.time() end
-
-local function punishInvalid(src, reason, details)
-    invalidAttempts[src] = (invalidAttempts[src] or 0) + 1
-    if invalidAttempts[src] >= Config.MaxInvalidAttempts then banPlayer(src, reason, details) end
-end
 
 local function getNeeds(src)
     local player = Ox.GetPlayer(src)
@@ -113,8 +103,8 @@ local function applyGiveItems(src, itemDef)
 end
 
 local function applyItemEffects(src, itemName, itemDef, usesLeft, freshness)
-    adjustStatus(src, 'hunger', itemDef.hunger or 0, true)
-    adjustStatus(src, 'thirst', itemDef.thirst or 0, true)
+    adjustStatus(src, 'hunger', itemDef.hunger or 0)
+    adjustStatus(src, 'thirst', itemDef.thirst or 0)
     adjustStatus(src, 'stress', itemDef.stress or 0)
     adjustStatus(src, 'alcohol', itemDef.alcohol or 0)
     adjustStatus(src, 'drug', itemDef.drug or 0)
@@ -207,7 +197,7 @@ lib.callback.register('fr_needs:server:getState', function(src) return getNeeds(
 RegisterNetEvent('fr_needs:server:drinkStation', function(stationId)
     local src, station = source, Config.TargetDrinkStations[tonumber(stationId)]
     if not station then return punishInvalid(src, 'fr_needs: invalid station', json.encode({ stationId = stationId })) end
-    adjustStatus(src, 'thirst', station.thirstGain or 0, true)
+    adjustStatus(src, 'thirst', station.thirstGain or 0)
     adjustStatus(src, 'stress', -(station.stressRelief or 0))
     sendState(src)
 end)
@@ -326,7 +316,7 @@ CreateThread(function()
         local now = GetGameTimer()
         for src, runtime in pairs(playerState) do
             local needs = getNeeds(src)
-            if needs and (needs.hunger >= Config.Starvation.hungerThreshold or needs.thirst >= Config.Starvation.thirstThreshold) then
+            if needs and (needs.hunger <= Config.Starvation.hungerThreshold or needs.thirst <= Config.Starvation.thirstThreshold) then
                 adjustStatus(src, 'stress', Config.Starvation.stressPerTick)
                 if now - (runtime.lastDamageAt or 0) >= Config.Starvation.damageEveryMs then
                     runtime.lastDamageAt = now

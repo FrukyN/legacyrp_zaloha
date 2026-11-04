@@ -6,9 +6,13 @@ end
 
 local function applyEffects(data)
     if not data then return end
-    if (data.hunger or 0) >= Config.Starvation.hungerThreshold or (data.thirst or 0) >= Config.Starvation.thirstThreshold then StartScreenEffect('DeathFailOut', 1500, false) end
+    if (data.hunger or 100) <= Config.Starvation.hungerThreshold or (data.thirst or 100) <= Config.Starvation.thirstThreshold then StartScreenEffect('DeathFailOut', 1500, false) end
     if (data.stress or 0) >= Config.Stress.highThreshold then StartScreenEffect('Rampage', Config.Stress.blurDurationMs, false) end
-    if (data.stress or 0) >= Config.Stress.shakeThreshold then ShakeGameplayCam('DRUNK_SHAKE', 0.18) end
+    if (data.stress or 0) >= Config.Stress.shakeThreshold then
+    ShakeGameplayCam('DRUNK_SHAKE', 0.18)
+else
+    StopGameplayCamShaking(false)
+end
 end
 
 local function getUseContext()

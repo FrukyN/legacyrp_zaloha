@@ -1,6 +1,21 @@
 local isMeleeDisabled = false
 
 lib.addRadialItem({ id = 'nastaveni', label = 'Nastavení', icon = 'gear', menu = 'nastaveni_main' })
+lib.addRadialItem({ id = 'carry', label = 'Nošení osob', icon = 'gear', menu = 'carry_main' })
+lib.addRadialItem({ id = 'skill', label = 'Dovednosti', icon = 'gear', menu = 'skill_main' })
+
+lib.registerRadial({
+    id = 'carry_main',
+    items = {
+        {
+            label = 'Přes záda',
+            icon = 'user',
+            onSelect = function()
+                ExecuteCommand('carry')
+            end
+        },
+    }
+})
 
 lib.registerRadial({
     id = 'nastaveni_main',
@@ -11,7 +26,7 @@ lib.registerRadial({
             onSelect = function()
                 isMeleeDisabled = not isMeleeDisabled
                 if isMeleeDisabled then
-                    lib.notify({ title = 'Nastavení', description = 'Mlácení R ZAKÁZÁNO', type = 'info' })
+                    lib.notify({ title = 'Nastavení', description = 'Mlácení R ZAKÁZÁNO', type = 'warning' })
                 else
                     lib.notify({ title = 'Nastavení', description = 'Mlácení R POVOLENO', type = 'info' })
                 end

@@ -9,15 +9,15 @@ Config.ConsumptionCooldownMs = 1200
 Config.MaxInvalidAttempts = 3
 Config.UsePromptTimeoutMs = 12000
 
-Config.Defaults = { hunger = 15, thirst = 15, stress = 15, alcohol = 0, drug = 0 }
+Config.Defaults = { hunger = 85, thirst = 85, stress = 15, alcohol = 0, drug = 0 }
 Config.OxStatuses = {
-    hunger = { default = Config.Defaults.hunger, onTick = 0.02 },
-    thirst = { default = Config.Defaults.thirst, onTick = 0.05 },
+    hunger = { default = Config.Defaults.hunger, onTick = -0.02 },
+    thirst = { default = Config.Defaults.thirst, onTick = -0.05 },
     stress = { default = Config.Defaults.stress, onTick = -0.10 },
     alcohol = { default = Config.Defaults.alcohol, onTick = -0.02 },
     drug = { default = Config.Defaults.drug, onTick = -0.02 }
 }
-Config.Starvation = { hungerThreshold = 90, thirstThreshold = 90, stressPerTick = 2, damageEveryMs = 12000, damage = 4, blackoutChance = 6 }
+Config.Starvation = { hungerThreshold = 10, thirstThreshold = 10, stressPerTick = 2, damageEveryMs = 12000, damage = 4}
 Config.Stress = { highThreshold = 70, shakeThreshold = 85, blurDurationMs = 3000 }
 Config.Withdrawal = { threshold = 15, stressPerTick = 2, stumbleChance = 8 }
 
