@@ -1,9 +1,5 @@
 Config = {}
 
-Config.SaveInterval = 5 -- Interval ukládání do DB v minutách
-Config.Command = 'skills' -- Příkaz pro otevření menu
-Config.Keybind = 'F7' -- Klávesa pro otevření menu (nastav nil pro vypnutí)
-
 Config.Skills = {
     stamina = {
         label = 'Kondice (Stamina)',

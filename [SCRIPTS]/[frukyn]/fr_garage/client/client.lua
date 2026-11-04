@@ -325,20 +325,6 @@ for id, g in pairs(Config.Garages) do
     })
 end
 
-RegisterCommand('frgarage_sharekey', function(_, args)
-    local target = tonumber(args[1])
-    local plate = args[2]
-    if not target or not plate then return notify('Použití: /frgarage_sharekey [server ID] [SPZ]', 'error') end
-    TriggerServerEvent('fr_garage:shareKey', target, plate, Config.KeyShareSeconds)
-end, false)
-
-RegisterCommand('frgarage_lock', function()
-    local veh = GetVehiclePedIsIn(cache.ped, false)
-    if veh == 0 then veh = GetClosestVehicle(GetEntityCoords(cache.ped), 8.0, 0, 70) end
-    if veh == 0 then return end
-    TriggerServerEvent('fr_garage:toggleLock', NetworkGetNetworkIdFromEntity(veh), GetVehicleNumberPlateText(veh))
-end, false)
-
 RegisterCommand('frgarage_impound', function()
     local veh = GetClosestVehicle(GetEntityCoords(cache.ped), 8.0, 0, 70)
     if veh == 0 then return notify('V okolí není vozidlo.', 'error') end
@@ -351,8 +337,6 @@ RegisterCommand('frgarage_impound', function()
         notify('Požadavek na impound odeslán.')
     end
 end, false)
-
-RegisterKeyMapping('frgarage_lock', 'Zamknout / odemknout vozidlo klíčem', 'keyboard', 'L')
 
 RegisterNetEvent('fr_garage:lockResult', function(netId)
     local veh = NetworkGetEntityFromNetworkId(netId)

@@ -1,10 +1,10 @@
 return {
     menuPosition = GetConvar('scully_emotemenu:menuPosition', 'top-right'),
     menuCommands = json.decode(GetConvar('scully_emotemenu:menuCommands', '["em", "emotemenu"]')),
-    menuKeybind = GetConvar('scully_emotemenu:menuKeybind', 'F5'),
-    enableRadialMenu = GetConvar('scully_emotemenu:enableRadialMenu', 'true') == 'true',
+    menuKeybind = GetConvar('scully_emotemenu:menuKeybind', 'F3'),
+    enableRadialMenu = GetConvar('scully_emotemenu:enableRadialMenu', 'false') == 'false',
     enableEmotePreview = GetConvar('scully_emotemenu:enableEmotePreview', 'true') == 'true',
-    enableEmoteBinds = GetConvar('scully_emotemenu:enableEmoteBinds', 'true') == 'true',
+    enableEmoteBinds = GetConvar('scully_emotemenu:enableEmoteBinds', 'true') == 'false',
     emoteCommands = json.decode(GetConvar('scully_emotemenu:emoteCommands', '["e", "emote", "eplay"]')),
     emoteCancelKey = GetConvar('scully_emotemenu:emoteCancelKey', 'X'),
     walkCommands = json.decode(GetConvar('scully_emotemenu:walkCommands', '["w", "walk"]')),

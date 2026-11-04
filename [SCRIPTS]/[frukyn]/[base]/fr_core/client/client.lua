@@ -5,7 +5,7 @@ for k, v in pairs(Config.RemoveHudComponents) do
     if v then activeHudComponents[#activeHudComponents + 1] = k end
 end
 
-local SUPPRESSED_MODELS = { `JET`, `LAZER`, `TITAN`, `BARRACKS`, `BARRACKS2`, `CRUSADER`, `RHINO`, `BLIMP` }
+local SUPPRESSED_MODELS = { `JET`, `LAZER`, `TITAN`, `BARRACKS`, `BARRACKS2`, `CRUSADER`, `RHINO`, `BLIMP`, `POLICEB` }
 
 local function initialize()
     if initialized then return end

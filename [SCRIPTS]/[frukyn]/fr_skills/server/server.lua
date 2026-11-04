@@ -9,9 +9,13 @@ local function getDefaultSkills()
     return tbl
 end
 
+lib.addCommand('skillmenu', { help = 'Otevře menu dovedností' }, function(source, args, rawCommand)
+    TriggerClientEvent('fr_skills:client:openMenu', source)
+end)
+
 local function loadPlayerSkills(source, charId)
     if not charId then return end
-    
+
     local result = MySQL.scalar.await('SELECT skills FROM fr_skills WHERE charId = ?', { charId })
     local skills = getDefaultSkills()
 
@@ -71,13 +75,11 @@ AddEventHandler('onResourceStart', function(resourceName)
     end
 end)
 
--- Přidávání zkušeností z klienta (s ochranou proti exploitům)
 RegisterNetEvent('fr_skills:server:addSkill', function(skillName, amount)
     local src = source
     local pData = playerSkills[src]
     if not pData or not Config.Skills[skillName] then return end
 
-    -- Anti-cheat: Omezení maximálního přírůstku za jeden tick
     amount = tonumber(amount) or 0.0
     if amount <= 0 or amount > 1.0 then return end
 
@@ -89,10 +91,9 @@ RegisterNetEvent('fr_skills:server:addSkill', function(skillName, amount)
     dirtyPlayers[src] = true
 end)
 
--- Pravidelné ukládání do DB (optimalizace DB dotazů)
 CreateThread(function()
     while true do
-        Wait(Config.SaveInterval * 60000)
+        Wait(5 * 60000)
         for src, _ in pairs(dirtyPlayers) do
             savePlayerSkills(src)
         end

@@ -43,7 +43,6 @@ local function addSkill(skillName, customGain)
     currentSkills[skillName] = newVal
     applySkillEffects()
 
-    -- Notifikace pouze při dosažení nového celého procenta (1%, 2%, atd.)
     if math.floor(newVal) > oldFloor then
         lib.notify({
             title = 'Zlepšení dovednosti',
@@ -63,7 +62,6 @@ RegisterNetEvent('fr_skills:client:setSkills', function(skills)
     applySkillEffects()
 end)
 
--- Zajištění, že po změně peda (respawn, změna skinu) zůstanou modifikátory aktivní
 lib.onCache('ped', function()
     if isLoaded then
         Wait(500)
@@ -71,9 +69,16 @@ lib.onCache('ped', function()
     end
 end)
 
--- Otevření ox_lib menu
 local function openSkillMenu()
-    if not isLoaded then return end
+    if not isLoaded then
+        lib.notify({
+            title = 'Dovednosti',
+            description = 'Tvoje dovednosti se ještě načítají ze serveru...',
+            type = 'error'
+        })
+        return
+    end
+
     local options = {}
 
     for k, cfg in pairs(Config.Skills) do
@@ -105,18 +110,11 @@ local function openSkillMenu()
     lib.showContext('fr_skills_menu')
 end
 
--- Příkaz a klávesová zkratka
-RegisterCommand(Config.Command, openSkillMenu, false)
-if Config.Keybind then
-    lib.addKeybind({
-        name = 'open_fr_skills',
-        description = 'Otevřít menu dovedností',
-        defaultKey = Config.Keybind,
-        onPressed = openSkillMenu
-    })
-end
+-- Event registruj až TADY (pod funkcí)
+RegisterNetEvent('fr_skills:client:openMenu', function()
+    openSkillMenu()
+end)
 
--- HLAVNÍ SMYČKA PRO POHYB (2500ms interval -> 0.00ms resmon)
 CreateThread(function()
     while true do
         Wait(2500)

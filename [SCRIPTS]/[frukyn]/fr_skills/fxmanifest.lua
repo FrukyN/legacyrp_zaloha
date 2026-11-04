@@ -6,14 +6,14 @@ lua54 'yes'
 shared_scripts {
     '@ox_lib/init.lua',
     '@ox_core/lib/init.lua',
-    'config.lua'
+    'shared/config.lua'
 }
 
 client_scripts {
-    'client.lua'
+    'client/client.lua'
 }
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
-    'server.lua'
+    'server/server.lua'
 }

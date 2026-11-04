@@ -1,9 +1,9 @@
 local isMeleeDisabled = false
 
 lib.addRadialItem({ id = 'nastaveni', label = 'Nastavení', icon = 'gear', menu = 'nastaveni_main' })
-lib.addRadialItem({ id = 'carry', label = 'Nošení osob', icon = 'gear', menu = 'carry_main' })
-lib.addRadialItem({ id = 'skill', label = 'Dovednosti', icon = 'gear', menu = 'skill_main' })
-lib.addRadialItem({ id = 'report', label = 'Reportmenu', icon = 'gear', menu = 'report_main' })
+lib.addRadialItem({ id = 'carry', label = 'Nošení osob', icon = 'share', menu = 'carry_main' })
+lib.addRadialItem({ id = 'skill', label = 'Dovednosti', icon = 'bolt', menu = 'skill_main' })
+lib.addRadialItem({ id = 'report', label = 'Reportmenu', icon = 'file', menu = 'report_main' })
 
 
 lib.registerRadial({
@@ -11,7 +11,7 @@ lib.registerRadial({
     items = {
         {
             label = 'Přes záda',
-            icon = 'user',
+            icon = 'share',
             onSelect = function()
                 ExecuteCommand('carry')
             end
@@ -23,10 +23,10 @@ lib.registerRadial({
     id = 'skill_main',
     items = {
         {
-            label = 'Přes záda',
-            icon = 'user',
+            label = 'Menu dovedností',
+            icon = 'bolt',
             onSelect = function()
-                ExecuteCommand('skill')
+                ExecuteCommand('skillmenu')
             end
         },
     }
@@ -36,8 +36,8 @@ lib.registerRadial({
     id = 'report_main',
     items = {
         {
-            label = 'Přes záda',
-            icon = 'user',
+            label = 'Otevřít report menu',
+            icon = 'file',
             onSelect = function()
                 ExecuteCommand('report')
             end

@@ -1,7 +1,7 @@
 Config = {}
 
 Config.Debug = false
-Config.KeyItem = 'vehicle_key'
+Config.KeyItem = 'carkey'
 Config.KeyShareSeconds = 3600
 Config.InteractKey = 38 -- E
 Config.SaveInterval = 30000
