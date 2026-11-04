@@ -7,7 +7,7 @@ AddEventHandler('wx_rpchat:sendMe', function(playerId, title, message, color)
     local sourcePed, targetPed = PlayerPedId(), GetPlayerPed(target)
     local sourceCoords, targetCoords = GetEntityCoords(sourcePed), GetEntityCoords(targetPed)
     if target == -1 then return end
-    if target == source or GetDistanceBetweenCoords(sourceCoords, targetCoords, true) < 10 then
+    if target == source or #(sourceCoords - targetCoords) < 10 then
       TriggerEvent('chat:addMessage', {
         template = [[
           <div style="padding: 0.15vw; height: 1.3vw; width: 100%; margin: 0.2vw;  background-color: rgba(6, 11, 34, 0.75); border-radius: 4px; padding-top: 0.4vw; border: none; box-shadow: 0px 0px 11px rgba(34, 34, 34, 0.35)">
@@ -38,7 +38,7 @@ AddEventHandler('wx_rpchat:sendTry', function(playerId, title, message, color)
         return
     end
 
-    if target == source or GetDistanceBetweenCoords(sourceCoords, targetCoords, true) < 10 then
+    if target == source or #(sourceCoords - targetCoords) < 10 then
       TriggerEvent('chat:addMessage', {
         template = [[
           <div style="padding: 0.15vw; height: 1.3vw; width: 100%; margin: 0.2vw;  background-color: rgba(6, 11, 34, 0.75); border-radius: 4px; padding-top: 0.4vw; border: none; box-shadow: 0px 0px 11px rgba(34, 34, 34, 0.35)">
@@ -67,7 +67,7 @@ AddEventHandler('wx_rpchat:sendDo', function(playerId, title, message, color)
   if target == -1 then
     return
   end
-  if target == source or GetDistanceBetweenCoords(sourceCoords, targetCoords, true) < 10 then
+  if target == source or #(sourceCoords - targetCoords) < 10 then
     TriggerEvent('chat:addMessage', {
       template = [[
           <div style="padding: 0.15vw; height: 1.3vw; width: 100%; margin: 0.2vw;  background-color: rgba(6, 11, 34, 0.75); border-radius: 4px; padding-top: 0.4vw; border: none; box-shadow: 0px 0px 11px rgba(34, 34, 34, 0.35)">
@@ -98,7 +98,7 @@ AddEventHandler('wx_rpchat:sendDoc', function(playerId, title, message, color)
         return
     end
 
-    if target == source or GetDistanceBetweenCoords(sourceCoords, targetCoords, true) < 10 then
+    if target == source or #(sourceCoords - targetCoords) < 10 then
       TriggerEvent('chat:addMessage', {
         template = [[
           <div style="padding: 0.15vw; height: 1.3vw; width: 100%; margin: 0.2vw;  background-color: rgba(6, 11, 34, 0.75); border-radius: 4px; padding-top: 0.4vw; border: none; box-shadow: 0px 0px 11px rgba(34, 34, 34, 0.35)">

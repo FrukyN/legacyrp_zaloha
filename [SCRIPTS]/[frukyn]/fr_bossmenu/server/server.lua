@@ -43,7 +43,10 @@ local function getPlayerJob(player, forcedJobName)
         end
     end
 
-    local jobName, grade = player.getGroupByType and player.getGroupByType('job')
+    local jobName, grade
+    if player.getGroupByType then
+        jobName, grade = player.getGroupByType('job')
+    end
     if type(jobName) == 'table' then 
         for k, v in pairs(jobName) do jobName, grade = k, v break end 
     end
@@ -373,7 +376,7 @@ lib.callback.register('bossmenu:server:getDashboard', function(source, jobName, 
     end
 
     local xPlayer, job, err = requireBoss(source, nil, 'get_dashboard')
-    if err then return nil end
+    if err or not job or not job.name then return nil end
     local online, total = getOnlineAndTotal(job.name)
     local top = getWeekTopEmployee(job.name)
     local balance = getSocietyBalance(job.name)

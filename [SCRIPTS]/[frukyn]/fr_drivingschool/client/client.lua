@@ -1,9 +1,9 @@
 local inDriveTest = false
 local currentCheckpoint = 1
 local driveErrors = 0
-local testVehicle = nil
-local instructorPed = nil
-local schoolPed = nil
+local testVehicle = 0
+local instructorPed = 0
+local schoolPed = 0
 
 CreateThread(function()
     lib.requestModel(Config.PedModel)
@@ -306,7 +306,7 @@ function StartDriveTest(type)
             end
 
             DrawMarker(1, cp.coords.x, cp.coords.y, cp.coords.z - 1.0, 0, 0, 0, 0, 0, 0, 3.0, 3.0, 1.0, 255, 255, 0, 100,
-                false, false, 2, false, nil, nil, false)
+                false, false, 2, false, '', '', false)
 
             if #(pedCoords - cp.coords) < 3.0 then
                 lib.notify({ title = 'Instruktor', description = cp.msg, type = 'info' })
@@ -346,7 +346,7 @@ function CleanupTest()
         DeleteEntity(testVehicle)
     end
 
-    SetEntityCoords(cache.ped, Config.Location.x, Config.Location.y, Config.Location.z)
+    SetEntityCoords(cache.ped, Config.Location.x, Config.Location.y, Config.Location.z, false, false, false, false)
 end
 
 AddEventHandler('onResourceStop', function(resourceName)

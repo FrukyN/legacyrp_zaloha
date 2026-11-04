@@ -28,9 +28,15 @@ local function getPlayerJob(forcedJobName)
         end
     end
 
-    local jobName, grade = player.getGroupByType and player.getGroupByType('job')
+    local jobName, grade
+    if player.getGroupByType then
+        jobName, grade = player.getGroupByType('job')
+    end
     if type(jobName) == 'table' then
-        for k, v in pairs(jobName) do jobName, grade = k, v break end
+        for k, v in pairs(jobName) do
+            jobName, grade = k, v
+            break
+        end
     end
     if not jobName then return nil end
 
@@ -136,7 +142,8 @@ local function openTransactionsMenu()
         local row = rows[i]
         options[#options + 1] = {
             title = ('%s | $%s'):format(row.action, row.amount),
-            description = ('By: %s | Target: %s | %s'):format(row.actor_name or 'Unknown', row.target_name or 'n/a', row.created_at),
+            description = ('By: %s | Target: %s | %s'):format(row.actor_name or 'Unknown', row.target_name or 'n/a',
+                row.created_at),
             metadata = {
                 { label = 'Reason', value = row.reason or '-' }
             }
@@ -172,9 +179,9 @@ local function openHRHistoryMenu()
             description = ('Date: %s'):format(row.created_at),
             metadata = {
                 { label = 'From grade', value = row.from_grade or '-' },
-                { label = 'To grade', value = row.to_grade or '-' },
-                { label = 'Amount', value = row.amount or '-' },
-                { label = 'Reason', value = row.reason or '-' }
+                { label = 'To grade',   value = row.to_grade or '-' },
+                { label = 'Amount',     value = row.amount or '-' },
+                { label = 'Reason',     value = row.reason or '-' }
             }
         }
     end
@@ -214,7 +221,7 @@ local function openEmployeeDetail(identifier, employeeName)
             onSelect = function()
                 local input = lib.inputDialog(('Bonus: %s'):format(employeeName), {
                     { type = 'number', label = 'Částka', required = true, min = 1 },
-                    { type = 'input', label = 'Důvod', required = true, max = 120 }
+                    { type = 'input',  label = 'Důvod',  required = true, max = 120 }
                 })
                 if not input then return end
                 TriggerServerEvent('bossmenu:server:bonus', identifier, tonumber(input[1]), input[2])
@@ -330,7 +337,7 @@ local function openEmployeesMenu()
             description = ('Salary: $%s | Worked: %s'):format(e.salary, minutesToHours(e.minutes)),
             metadata = {
                 { label = 'Identifier', value = e.identifier },
-                { label = 'Last seen', value = e.lastSeen or 'n/a' }
+                { label = 'Last seen',  value = e.lastSeen or 'n/a' }
             },
             onSelect = function()
                 openEmployeeDetail(e.identifier, e.name)
@@ -413,8 +420,8 @@ local function openOrdersMenu()
                 end
 
                 local input = lib.inputDialog('Material Order', {
-                    { type = 'select', label = 'Item', options = catalog, required = true },
-                    { type = 'number', label = 'Amount', required = true, min = 1, max = Config.MaxOrderAmount }
+                    { type = 'select', label = 'Item',   options = catalog, required = true },
+                    { type = 'number', label = 'Amount', required = true,   min = 1,        max = Config.MaxOrderAmount }
                 })
 
                 if not input then return end
@@ -431,7 +438,8 @@ local function openOrdersMenu()
         local o = orders[i]
         options[#options + 1] = {
             title = ('%s x%s [%s]'):format(o.item, o.amount, o.status),
-            description = ('By %s | Cost $%s | Delivery %s'):format(o.ordered_by_name or 'Unknown', o.total_price or 0, o.deliver_at or '-')
+            description = ('By %s | Cost $%s | Delivery %s'):format(o.ordered_by_name or 'Unknown', o.total_price or 0,
+                o.deliver_at or '-')
         }
     end
 
@@ -446,7 +454,8 @@ local function openOrdersMenu()
 end
 
 function OpenBossMenu()
-    local dashboard = lib.callback.await('bossmenu:server:getDashboard', false, CurrentBossJob, Config.Jobs[CurrentBossJob])
+    local dashboard = lib.callback.await('bossmenu:server:getDashboard', false, CurrentBossJob,
+        Config.Jobs[CurrentBossJob])
     if not dashboard then
         notify('error', 'Nemáš přístup k boss menu.')
         return
@@ -455,7 +464,8 @@ function OpenBossMenu()
     local options = {
         {
             title = ('Firemní zůstatek: $%s'):format(groupDigits(dashboard.balance)),
-            description = ('Aktivních zaměstnanců: %s / Zaměstnanců celkově: %s'):format(dashboard.online, dashboard.total)
+            description = ('Aktivních zaměstnanců: %s / Zaměstnanců celkově: %s'):format(dashboard.online,
+                dashboard.total)
         },
         {
             title = 'Vklad peněz',
