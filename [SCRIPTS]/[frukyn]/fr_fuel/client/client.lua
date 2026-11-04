@@ -180,7 +180,7 @@ local function createHose(pumpEntity)
             pumpCoords.x, pumpCoords.y, pumpCoords.z + 1.0,
             0.0, 0.0, 0.0,
             Config.Hose.length, 1, Config.Hose.length,
-            1.0, 0.0, false, false, false, 1.0, false, 0
+            1.0, 0.0, false, false, false, 1.0, false
         )
 
         if rope and rope ~= 0 then
@@ -189,7 +189,7 @@ local function createHose(pumpEntity)
                 rope, pumpEntity, nozzle,
                 pumpCoords.x, pumpCoords.y, pumpCoords.z + 1.0,
                 pedCoords.x, pedCoords.y, pedCoords.z,
-                Config.Hose.length, false, false, 0, 0
+                Config.Hose.length, false, false, '', ''
             )
             state.rope = rope
         end

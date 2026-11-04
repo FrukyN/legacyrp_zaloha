@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS `fr_skills` (
+    `charId` INT UNSIGNED NOT NULL PRIMARY KEY,
+    `skills` LONGTEXT NOT NULL DEFAULT '{}'
+);

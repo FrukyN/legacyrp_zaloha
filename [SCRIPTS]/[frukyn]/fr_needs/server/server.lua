@@ -1,8 +1,17 @@
 local Ox = require '@ox_core.lib.init'
 
-local playerState, consumeCooldown, pendingUse = {}, {}, {}
+local playerState, consumeCooldown, pendingUse, invalidAttempts = {}, {}, {}, {}
 
 local statusNames = { 'hunger', 'thirst', 'stress', 'alcohol', 'drug' }
+
+local function punishInvalid(src, reason, extra)
+    invalidAttempts[src] = (invalidAttempts[src] or 0) + 1
+    print(('[fr_needs] Suspicious action by [%s]: %s | extra: %s'):format(src, reason, extra or 'none'))
+
+    if invalidAttempts[src] >= (Config.MaxInvalidAttempts or 3) then
+        DropPlayer(src, 'fr_needs: Podezřelé chování / exploit.')
+    end
+end
 
 local function nowTs() return os.time() end
 
