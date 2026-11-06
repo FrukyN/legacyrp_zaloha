@@ -1,25 +1,25 @@
 KVP = require 'client.modules.kvp'
 Utils = require 'shared.modules.utils'
-Config = lib.load('shared.data.config')
-Walks = lib.load('shared.data.walks')
-Scenarios = lib.load('shared.data.scenarios')
-Expressions = lib.load('shared.data.expressions')
+Config = require('shared.data.config')
+Walks = require 'shared.data.walks'
+Scenarios = require('shared.data.scenarios')
+Expressions = require('shared.data.expressions')
 Emotes = {
-    lib.load('shared.data.emotes.general_emotes'),
-    lib.load('shared.data.emotes.prop_emotes'),
-    lib.load('shared.data.emotes.consumable_emotes'),
-    lib.load('shared.data.emotes.dance_emotes'),
-    lib.load('shared.data.emotes.synchronized_emotes'),
-    lib.load('shared.data.emotes.synchronized_dance_emotes'),
-    lib.load('shared.data.emotes.animal_emotes')
+    require('shared.data.emotes.general_emotes'),
+    require('shared.data.emotes.prop_emotes'),
+    require('shared.data.emotes.consumable_emotes'),
+    require('shared.data.emotes.dance_emotes'),
+    require('shared.data.emotes.synchronized_emotes'),
+    require('shared.data.emotes.synchronized_dance_emotes'),
+    require('shared.data.emotes.animal_emotes')
 }
-ExitEmotes = lib.load('shared.data.emotes.exit_emotes')
+ExitEmotes = require('shared.data.emotes.exit_emotes')
 
 EmoteBinds = KVP.getTable('keybinds')
 PlayerState = LocalPlayer.state
 
-local pedTypes = lib.load('client.data.ped_types')
-local scenarioModels = lib.load('client.data.scenario_models')
+local pedTypes = require('client.data.ped_types')
+local scenarioModels = require('client.data.scenario_models')
 local placement = require 'client.modules.placement'
 local keybinds = {}
 local registeredEmotes = {}

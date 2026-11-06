@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Police MDT System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="mdt-app">
+        <!-- Boční navigační panel -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-shield-halved brand-icon"></i>
+                <div class="brand-text">
+                    <span class="brand-title">LSPD // MDT</span>
+                    <span class="brand-sub" id="system-subtitle">POLICE CAD & DATABASE</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section-label">HLAVNÍ MENU</div>
+                <button class="nav-btn active" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Přehled (Dashboard)</span>
+                </button>
+                <button class="nav-btn" data-tab="citizens">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Občané (Profily)</span>
+                </button>
+                <button class="nav-btn" data-tab="vehicles">
+                    <i class="fa-solid fa-car"></i>
+                    <span>Vozidla (Registr)</span>
+                </button>
+                <button class="nav-btn" data-tab="weapons">
+                    <i class="fa-solid fa-gun"></i>
+                    <span>Registr zbraní</span>
+                </button>
+                <button class="nav-btn" data-tab="incidents">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <span>Spisy & Incidenty</span>
+                </button>
+                <button class="nav-btn" data-tab="warrants">
+                    <i class="fa-solid fa-handcuffs"></i>
+                    <span>Zatykače (Warrants)</span>
+                </button>
+                <button class="nav-btn" data-tab="bolos">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Aktivní BOLOs</span>
+                </button>
+                <button class="nav-btn" data-tab="codes">
+                    <i class="fa-solid fa-radio"></i>
+                    <span>Kódy & Volací znaky</span>
+                </button>
+                <button class="nav-btn" data-tab="penalcode">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    <span>Sazebník trestů</span>
+                </button>
+                <button class="nav-btn" data-tab="dispatch">
+                    <i class="fa-solid fa-tower-broadcast"></i>
+                    <span>Tísňová volání</span>
+                </button>
+
+                <div class="nav-section-label role-restricted" id="nav-management-label" style="display: none;">MANAGEMENT</div>
+                <button class="nav-btn role-restricted" id="nav-btn-logs" data-tab="logs" style="display: none;">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <span>Záznamy (Audit Log)</span>
+                </button>
+                <button class="nav-btn role-restricted" id="nav-btn-admin" data-tab="admin" style="display: none;">
+                    <i class="fa-solid fa-user-gear"></i>
+                    <span>Administrace & Práva</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-officer">
+                <div class="officer-info">
+                    <div class="officer-avatar"><i class="fa-solid fa-user-shield"></i></div>
+                    <div class="officer-details">
+                        <span class="officer-name" id="officer-name">Načítání...</span>
+                        <div class="officer-sub-row">
+                            <span class="officer-callsign" id="officer-callsign">1-A-01</span>
+                            <span class="officer-role-badge" id="officer-role-badge">OFFICER</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="status-selector">
+                    <select id="unit-status-select">
+                        <option value="10-8">10-8 · Ve službě</option>
+                        <option value="10-6">10-6 · Zaneprázdněn</option>
+                        <option value="10-97">10-97 · Na místě</option>
+                        <option value="10-7">10-7 · Mimo službu</option>
+                    </select>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Hlavní obsahová oblast -->
+        <main class="main-content">
+            <!-- Horní lišta -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <span class="badge-dept" id="dept-badge">LSPD</span>
+                    <span class="badge-role" id="dept-role-indicator">Služební terminál</span>
+                    <span class="live-clock" id="live-clock">00:00:00</span>
+                </div>
+                <div class="topbar-right">
+                    <button class="btn-sm btn-outline" id="btn-edit-callsign" title="Změnit volací znak">
+                        <i class="fa-solid fa-pen"></i> Callsign
+                    </button>
+                    <button class="btn-close" id="btn-close-mdt" title="Zavřít MDT">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Taby obsahu -->
+            <div class="tab-content">
+                <!-- 1. DASHBOARD -->
+                <section class="tab-pane active" id="pane-dashboard">
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <i class="fa-solid fa-user-shield stat-icon" style="color: #38bdf8;"></i>
+                            <div class="stat-info">
+                                <span class="stat-value" id="stat-units">0</span>
+                                <span class="stat-label">Hlídek ve službě</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-handcuffs stat-icon" style="color: #f43f5e;"></i>
+                            <div class="stat-info">
+                                <span class="stat-value" id="stat-warrants">0</span>
+                                <span class="stat-label">Aktivních zatykačů</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-triangle-exclamation stat-icon" style="color: #fb923c;"></i>
+                            <div class="stat-info">
+                                <span class="stat-value" id="stat-bolos">0</span>
+                                <span class="stat-label">Aktivních BOLOs</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fa-solid fa-tower-broadcast stat-icon" style="color: #f59e0b;"></i>
+                            <div class="stat-info">
+                                <span class="stat-value" id="stat-calls">0</span>
+                                <span class="stat-label">Aktivních výzev</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <!-- Hasiči a policisté ve službě -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fa-solid fa-users-viewfinder"></i> Jednotky ve službě</h3>
+                                <button class="btn-xs btn-outline" id="btn-refresh-roster"><i class="fa-solid fa-rotate"></i> Obnovit</button>
+                            </div>
+                            <div class="panel-body unit-roster-list" id="dashboard-unit-list">
+                                <!-- Dynamicky vkládané jednotky -->
+                            </div>
+                        </div>
+
+                        <!-- Nástěnka oddělení -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fa-solid fa-bullhorn"></i> Oznámení oddělení</h3>
+                                <button class="btn-sm btn-primary" id="btn-add-bulletin"><i class="fa-solid fa-plus"></i> Nové</button>
+                            </div>
+                            <div class="panel-body bulletin-list" id="dashboard-bulletin-list">
+                                <!-- Dynamická oznámení -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. OBČANÉ -->
+                <section class="tab-pane" id="pane-citizens">
+                    <div class="search-bar-row">
+                        <div class="search-input-wrap">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="citizen-search-input" placeholder="Hledat podle jména, rodného čísla (ID) nebo telefonu...">
+                        </div>
+                        <button class="btn-primary" id="btn-search-citizen">Vyhledat</button>
+                    </div>
+
+                    <div class="split-view">
+                        <div class="search-results-list" id="citizen-results-list">
+                            <div class="empty-state">Zadejte jméno nebo číslo pro vyhledání osoby.</div>
+                        </div>
+
+                        <div class="detail-card" id="citizen-detail-card" style="display: none;">
+                            <div class="detail-header">
+                                <div class="citizen-photo">
+                                    <i class="fa-solid fa-user-tie"></i>
+                                </div>
+                                <div class="citizen-main-info">
+                                    <h2 id="cd-fullname">Jan Novák</h2>
+                                    <div class="citizen-meta">
+                                        <span><i class="fa-solid fa-id-card"></i> ID: <strong id="cd-id">123</strong></span>
+                                        <span><i class="fa-solid fa-cake-candles"></i> Narozen: <strong id="cd-dob">01.01.1990</strong></span>
+                                        <span><i class="fa-solid fa-venus-mars"></i> Pohlaví: <strong id="cd-gender">Muž</strong></span>
+                                        <span><i class="fa-solid fa-phone"></i> Telefon: <strong id="cd-phone">123456</strong></span>
+                                    </div>
+                                    <div class="citizen-tags" id="cd-tags-container"></div>
+                                </div>
+                            </div>
+
+                            <div class="detail-sections">
+                                <!-- Registrované zbraně -->
+                                <div class="sub-section">
+                                    <h4><i class="fa-solid fa-gun"></i> Registrované zbraně</h4>
+                                    <div class="table-compact" id="cd-weapons-list"></div>
+                                </div>
+
+                                <!-- Registrovaná vozidla -->
+                                <div class="sub-section">
+                                    <h4><i class="fa-solid fa-car"></i> Registrovaná vozidla</h4>
+                                    <div class="table-compact" id="cd-vehicles-list"></div>
+                                </div>
+
+                                <!-- Zatykače a záznamy -->
+                                <div class="sub-section">
+                                    <h4><i class="fa-solid fa-clock-rotate-left"></i> Předchozí tresty a spisy</h4>
+                                    <div class="history-list" id="cd-history-list"></div>
+                                </div>
+
+                                <!-- Poznámky důstojníků -->
+                                <div class="sub-section">
+                                    <div class="sub-header-btn">
+                                        <h4><i class="fa-solid fa-note-sticky"></i> Poznámky policie</h4>
+                                        <button class="btn-xs btn-outline" id="btn-add-citizen-note"><i class="fa-solid fa-plus"></i> Přidat poznámku</button>
+                                    </div>
+                                    <div class="notes-list" id="cd-notes-list"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. VOZIDLA -->
+                <section class="tab-pane" id="pane-vehicles">
+                    <div class="search-bar-row">
+                        <div class="search-input-wrap">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="vehicle-search-input" placeholder="Hledat podle SPZ nebo modelu auta...">
+                        </div>
+                        <button class="btn-primary" id="btn-search-vehicle">Vyhledat</button>
+                    </div>
+
+                    <div class="split-view">
+                        <div class="search-results-list" id="vehicle-results-list">
+                            <div class="empty-state">Zadejte SPZ nebo model vozidla.</div>
+                        </div>
+
+                        <div class="detail-card" id="vehicle-detail-card" style="display: none;">
+                            <div class="detail-header">
+                                <div class="vehicle-plate-badge" id="vd-plate">ABC 123</div>
+                                <div class="vehicle-main-info">
+                                    <h2 id="vd-model">Sultan RS</h2>
+                                    <div class="vehicle-meta">
+                                        <span>Majitel: <strong id="vd-owner" class="linkable">Neznámý</strong></span>
+                                        <span>VIN: <strong id="vd-vin">-</strong></span>
+                                        <span>Stav: <strong id="vd-state">V garáži</strong></span>
+                                    </div>
+                                </div>
+                                <div class="vehicle-actions">
+                                    <button class="btn-danger btn-sm" id="btn-toggle-bolo"><i class="fa-solid fa-triangle-exclamation"></i> BOLO (Kradené)</button>
+                                </div>
+                            </div>
+
+                            <div class="detail-sections">
+                                <div class="sub-section">
+                                    <h4><i class="fa-solid fa-note-sticky"></i> Záznam k vozidlu</h4>
+                                    <textarea id="vd-notes-textarea" placeholder="Zadejte poznámku k vozidlu (např. uniká kontrolám, zatmavená skla)..."></textarea>
+                                    <button class="btn-sm btn-primary" id="btn-save-veh-note" style="margin-top: 8px;">Uložit poznámku</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. REGISTR ZBRANÍ -->
+                <section class="tab-pane" id="pane-weapons">
+                    <div class="search-bar-row">
+                        <div class="search-input-wrap">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="weapon-search-input" placeholder="Hledat podle sériového čísla (SN), názvu nebo majitele...">
+                        </div>
+                        <button class="btn-primary" id="btn-search-weapon">Vyhledat</button>
+                        <button class="btn-primary btn-accent" id="btn-open-weapon-modal"><i class="fa-solid fa-plus"></i> Zaregistrovat zbraň</button>
+                    </div>
+
+                    <div class="split-view">
+                        <div class="search-results-list" id="weapon-results-list">
+                            <div class="empty-state">Zadejte sériové číslo nebo majitele zbraně pro vyhledání.</div>
+                        </div>
+
+                        <div class="detail-card" id="weapon-detail-card" style="display: none;">
+                            <div class="detail-header">
+                                <div class="weapon-serial-badge" id="wd-serial">SN-000000</div>
+                                <div class="weapon-main-info">
+                                    <h2 id="wd-label">Pistole Mk II</h2>
+                                    <div class="weapon-meta">
+                                        <span>Model: <strong id="wd-model">WEAPON_PISTOL</strong></span>
+                                        <span>Majitel: <strong id="wd-owner" class="linkable">Jan Novák</strong></span>
+                                        <span>Registrováno: <strong id="wd-registered">01.01.2026</strong></span>
+                                        <span>Zapsal: <strong id="wd-by">Důstojník</strong></span>
+                                    </div>
+                                </div>
+                                <div class="weapon-actions">
+                                    <button class="btn-danger btn-sm" id="btn-toggle-weapon-stolen"><i class="fa-solid fa-triangle-exclamation"></i> Označit jako kradenou</button>
+                                </div>
+                            </div>
+
+                            <div class="detail-sections">
+                                <div class="sub-section">
+                                    <h4><i class="fa-solid fa-fingerprint"></i> Balistická zkouška a kriminalistické záznamy</h4>
+                                    <textarea id="wd-ballistics-textarea" rows="4" placeholder="Záznamy o drážkování hlavně, balistických stopách, spojitosti s trestnými činy..."></textarea>
+                                    <button class="btn-sm btn-primary" id="btn-save-ballistics" style="margin-top: 8px;"><i class="fa-solid fa-save"></i> Uložit balistiku</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. SPISY & INCIDENTY -->
+                <section class="tab-pane" id="pane-incidents">
+                    <div class="search-bar-row">
+                        <div class="search-input-wrap">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="incident-search-input" placeholder="Hledat incident podle názvu nebo čísla spisu...">
+                        </div>
+                        <button class="btn-primary" id="btn-new-incident"><i class="fa-solid fa-plus"></i> Nový spis</button>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Spis #</th>
+                                    <th>Název případu</th>
+                                    <th>Zpracoval</th>
+                                    <th>Pokuta</th>
+                                    <th>Trest</th>
+                                    <th>Stav</th>
+                                    <th>Datum</th>
+                                    <th>Akce</th>
+                                </tr>
+                            </thead>
+                            <tbody id="incidents-table-body">
+                                <!-- Dynamické incidenty -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- 6. ZATYKAČE -->
+                <section class="tab-pane" id="pane-warrants">
+                    <div class="panel-header" style="margin-bottom: 15px;">
+                        <h2><i class="fa-solid fa-handcuffs"></i> Celostátní zatykače (Warrants)</h2>
+                        <button class="btn-primary" id="btn-create-warrant"><i class="fa-solid fa-plus"></i> Vydat zatykač</button>
+                    </div>
+                    <div class="warrants-grid" id="warrants-grid-list">
+                        <!-- Karty zatykačů -->
+                    </div>
+                </section>
+
+                <!-- 7. AKTIVNÍ BOLOS -->
+                <section class="tab-pane" id="pane-bolos">
+                    <div class="panel-header" style="margin-bottom: 15px;">
+                        <div>
+                            <h2><i class="fa-solid fa-triangle-exclamation" style="color: #fb923c;"></i> Aktivní hlášení BOLO (Be On the Lookout)</h2>
+                            <span style="font-size: 12px; color: var(--text-muted);">Pátrání po podezřelých osobách a zájmových vozidlech v celém San Andreas</span>
+                        </div>
+                        <button class="btn-danger" id="btn-create-bolo"><i class="fa-solid fa-plus"></i> Vydat nové BOLO</button>
+                    </div>
+
+                    <div class="bolos-grid" id="bolos-grid-list">
+                        <!-- Karty BOLO -->
+                    </div>
+                </section>
+
+                <!-- 8. KÓDY A VOLACÍ ZNAKY -->
+                <section class="tab-pane" id="pane-codes">
+                    <div class="codes-split-view">
+                        <!-- Desítkové kódy -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fa-solid fa-walkie-talkie"></i> Policejní desítkové kódy (10-Codes)</h3>
+                                <input type="text" id="codes-filter-input" class="search-mini" placeholder="Filtrovat kód...">
+                            </div>
+                            <div class="panel-body codes-scroll-list" id="tencodes-container">
+                                <!-- Seznam kódů -->
+                            </div>
+                        </div>
+
+                        <!-- Volací znaky a struktura -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3><i class="fa-solid fa-id-badge"></i> Systém volacích znaků & Divize</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="callsign-guide-card">
+                                    <h4>Formát volacího znaku hlídky</h4>
+                                    <div class="callsign-formula">
+                                        <span class="cs-part">[Číslo směny]</span> - <span class="cs-part">[Písmeno divize]</span> - <span class="cs-part">[Číslo vozu]</span>
+                                    </div>
+                                    <p class="cs-example">Příklad: <strong>1-A-12</strong> = 1. směna, Adam (hlídka ve 2 lidech), vozidlo 12</p>
+                                </div>
+
+                                <h4 style="margin-top: 15px; margin-bottom: 8px; font-size: 13.5px; color: var(--accent);">Seznam divizí a jednotek</h4>
+                                <div class="divisions-list" id="divisions-container">
+                                    <!-- Divize -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 9. SAZEBNÍK TRESTŮ -->
+                <section class="tab-pane" id="pane-penalcode">
+                    <div class="search-bar-row">
+                        <div class="search-input-wrap">
+                            <i class="fa-solid fa-scale-balanced"></i>
+                            <input type="text" id="penalcode-search-input" placeholder="Hledat přestupek nebo trestný čin v trestním sazebníku...">
+                        </div>
+                    </div>
+                    <div class="penalcode-container" id="penalcode-list">
+                        <!-- Dynamický sazebník -->
+                    </div>
+                </section>
+
+                <!-- 10. DISPATCH HOVORY -->
+                <section class="tab-pane" id="pane-dispatch">
+                    <div class="panel-header" style="margin-bottom: 15px;">
+                        <h2><i class="fa-solid fa-tower-broadcast"></i> Záznam tísňových hlášení</h2>
+                    </div>
+                    <div class="dispatch-feed-list" id="dispatch-feed-container">
+                        <!-- Živá hlášení -->
+                    </div>
+                </section>
+
+                <!-- 11. AUDIT LOGY (ZÁZNAMY) -->
+                <section class="tab-pane" id="pane-logs">
+                    <div class="panel-header" style="margin-bottom: 15px;">
+                        <div>
+                            <h2><i class="fa-solid fa-clipboard-list"></i> Bezpečnostní auditní záznamy (MDT Logs)</h2>
+                            <span style="font-size: 12px; color: var(--text-muted);">Zaznamenává veškeré vyhledávání, manipulaci se spisy, zbraněmi a oprávněními</span>
+                        </div>
+                        <button class="btn-primary" id="btn-refresh-logs"><i class="fa-solid fa-rotate"></i> Aktualizovat logy</button>
+                    </div>
+
+                    <div class="search-bar-row">
+                        <div class="search-input-wrap">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="logs-search-input" placeholder="Filtrovat logy podle jména důstojníka, typu akce nebo detailu...">
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID #</th>
+                                    <th>Čas záznamu</th>
+                                    <th>Důstojník</th>
+                                    <th>Akce</th>
+                                    <th>Podrobnosti</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logs-table-body">
+                                <!-- Dynamické logy -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- 12. ADMINISTRACE & OPRÁVNĚNÍ -->
+                <section class="tab-pane" id="pane-admin">
+                    <div class="panel-header" style="margin-bottom: 15px;">
+                        <div>
+                            <h2><i class="fa-solid fa-user-gear"></i> Správa personálu a rolí MDT</h2>
+                            <span style="font-size: 12px; color: var(--text-muted);">Nastavení pravomocí pro důstojníky, vyšetřovatele a velení</span>
+                        </div>
+                        <button class="btn-primary" id="btn-refresh-staff"><i class="fa-solid fa-rotate"></i> Obnovit seznam</button>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Char ID</th>
+                                    <th>Jméno a příjmení</th>
+                                    <th>Složka</th>
+                                    <th>Hodnost</th>
+                                    <th>Callsign</th>
+                                    <th>MDT Oprávnění</th>
+                                    <th>Akce</th>
+                                </tr>
+                            </thead>
+                            <tbody id="staff-table-body">
+                                <!-- Personál -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modální okno: Tvorba / Editace incidentu -->
+    <div class="modal-backdrop" id="modal-incident">
+        <div class="modal-window modal-lg">
+            <div class="modal-header">
+                <h3 id="incident-modal-title">Nový policejní spis</h3>
+                <button class="modal-close" data-close="modal-incident">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Název incidentu</label>
+                    <input type="text" id="inc-form-title" placeholder="např. Ozbrojené přepadení obchodu na 24/7">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Podezřelý (Jméno / ID)</label>
+                        <input type="text" id="inc-form-suspect" placeholder="např. Jan Novák (102)">
+                    </div>
+                    <div class="form-group">
+                        <label>Stav případu</label>
+                        <select id="inc-form-status">
+                            <option value="open">Otevřený (Vyšetřování)</option>
+                            <option value="closed">Uzavřený (Trest udělen)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Výběr obvinění ze sazebníku</label>
+                    <div class="charge-selector-box">
+                        <div class="selected-charges-pills" id="inc-selected-charges"></div>
+                        <input type="text" id="charge-picker-search" placeholder="Začněte psát název trestného činu pro přidání...">
+                        <div class="charge-picker-dropdown" id="charge-picker-dropdown" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="charge-summary-box">
+                    <span>Celková pokuta: <strong id="inc-summary-fine">$0</strong></span>
+                    <span>Délka vězení: <strong id="inc-summary-jail">0 měsíců</strong></span>
+                </div>
+
+                <div class="form-group">
+                    <label>Popis incidentu a průběh zásahu</label>
+                    <textarea id="inc-form-desc" rows="4" placeholder="Podrobný popis skutku, časová osa, svědectví..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Důkazy a zabavené předměty</label>
+                    <textarea id="inc-form-evidence" rows="2" placeholder="Seznam zabavených zbraní, drog, stop..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" data-close="modal-incident">Zrušit</button>
+                <button class="btn-primary" id="btn-save-incident-confirm">Uložit spis</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modální okno: Detailní náhled celého spisu (Incident Inspector) -->
+    <div class="modal-backdrop" id="modal-view-incident">
+        <div class="modal-window modal-lg">
+            <div class="modal-header">
+                <h3 id="vi-title">Spis #0</h3>
+                <button class="modal-close" data-close="modal-view-incident">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="incident-view-grid">
+                    <div class="incident-meta-panel">
+                        <div class="info-line"><span>Zpracovatel:</span> <strong id="vi-creator">-</strong></div>
+                        <div class="info-line"><span>Datum:</span> <strong id="vi-date">-</strong></div>
+                        <div class="info-line"><span>Stav:</span> <strong id="vi-status">-</strong></div>
+                        <div class="info-line"><span>Celková sankce:</span> <strong id="vi-fine" style="color:var(--success)">$0</strong></div>
+                        <div class="info-line"><span>Trest odnětí:</span> <strong id="vi-jail" style="color:var(--danger)">0 m</strong></div>
+                    </div>
+                    <div class="incident-detail-panel">
+                        <h4>Podezřelí a udělená obvinění</h4>
+                        <div id="vi-suspects-list" class="charges-breakdown-list"></div>
+
+                        <h4 style="margin-top: 15px;">Podrobný popis případu</h4>
+                        <div id="vi-description" class="text-block"></div>
+
+                        <h4 style="margin-top: 15px;">Doličné důkazy a zajištěné stopy</h4>
+                        <div id="vi-evidence" class="text-block"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" data-close="modal-view-incident">Zavřít</button>
+                <button class="btn-danger" id="btn-toggle-incident-status">Změnit stav spisu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modální okno: Registrace zbraně -->
+    <div class="modal-backdrop" id="modal-weapon">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h3>Zaregistrovat zbraň do databáze</h3>
+                <button class="modal-close" data-close="modal-weapon">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Sériové číslo (SN)</label>
+                    <input type="text" id="weapon-form-serial" placeholder="např. WEP-9823412">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Kód modelu (spawn kód)</label>
+                        <input type="text" id="weapon-form-model" placeholder="WEAPON_PISTOL">
+                    </div>
+                    <div class="form-group">
+                        <label>Veřejný název zbraně</label>
+                        <input type="text" id="weapon-form-label" placeholder="např. Glock 19 (9mm)">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ID majitele (Char ID)</label>
+                        <input type="number" id="weapon-form-ownerid" placeholder="ID postavy">
+                    </div>
+                    <div class="form-group">
+                        <label>Jméno majitele</label>
+                        <input type="text" id="weapon-form-ownername" placeholder="Jan Novák">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Balistické záznamy / Poznámka</label>
+                    <textarea id="weapon-form-ballistics" rows="2" placeholder="Informace o zbrani, balistický profil..."></textarea>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label><input type="checkbox" id="weapon-form-stolen"> Zbraň je hlášena jako kradená</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" data-close="modal-weapon">Zrušit</button>
+                <button class="btn-primary" id="btn-confirm-weapon">Uložit do registru</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modální okno: Vydat BOLO -->
+    <div class="modal-backdrop" id="modal-bolo">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h3>Vydat celostátní hlášení BOLO</h3>
+                <button class="modal-close" data-close="modal-bolo">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Typ pátrání</label>
+                        <select id="bolo-form-type">
+                            <option value="person">Podezřelá osoba</option>
+                            <option value="vehicle">Hledané vozidlo</option>
+                            <option value="other">Jiné ohrožení</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Úroveň nebezpečí</label>
+                        <select id="bolo-form-danger">
+                            <option value="low">Nízká (Standardní prověření)</option>
+                            <option value="medium" selected>Střední (Zvýšená opatrnost)</option>
+                            <option value="high">Vysoká (Ozbrojen a nebezpečný!)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Titulek / Předmět BOLO</label>
+                    <input type="text" id="bolo-form-title" placeholder="např. Černý Sultan RS s maskovanou posádkou">
+                </div>
+                <div class="form-row" id="bolo-target-row">
+                    <div class="form-group">
+                        <label>Hledané jméno (pokud je známo)</label>
+                        <input type="text" id="bolo-form-target" placeholder="Jméno podezřelého">
+                    </div>
+                    <div class="form-group">
+                        <label>SPZ vozidla (pokud jde o auto)</label>
+                        <input type="text" id="bolo-form-plate" placeholder="např. 22ABC34">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Důvod a podrobnosti pátrání</label>
+                    <textarea id="bolo-form-reason" rows="3" placeholder="Popis pachatele/vozidla, směr úniku, výzbroj..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" data-close="modal-bolo">Zrušit</button>
+                <button class="btn-danger" id="btn-confirm-bolo">Vydat BOLO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modální okno: Vydat zatykač -->
+    <div class="modal-backdrop" id="modal-warrant">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h3>Vydat zatykač</h3>
+                <button class="modal-close" data-close="modal-warrant">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Hledaná osoba (Jméno)</label>
+                    <input type="text" id="warrant-form-name" placeholder="Celé jméno podezřelého">
+                </div>
+                <div class="form-group">
+                    <label>Char ID (Rodné číslo)</label>
+                    <input type="number" id="warrant-form-charid" placeholder="ID postavy">
+                </div>
+                <div class="form-group">
+                    <label>Důvod vydání zatykače</label>
+                    <input type="text" id="warrant-form-reason" placeholder="např. Útěk z místa vraždy, ozbrojený">
+                </div>
+                <div class="form-group">
+                    <label>Platnost zatykače</label>
+                    <select id="warrant-form-days">
+                        <option value="3">3 dny</option>
+                        <option value="7" selected>7 dní</option>
+                        <option value="14">14 dní</option>
+                        <option value="30">30 dní</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" data-close="modal-warrant">Zrušit</button>
+                <button class="btn-danger" id="btn-confirm-warrant">Vydat zatykač</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modální okno: Správa role a oprávnění důstojníka -->
+    <div class="modal-backdrop" id="modal-role">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h3>Změna MDT oprávnění</h3>
+                <button class="modal-close" data-close="modal-role">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Důstojník</label>
+                    <input type="text" id="role-form-name" readonly style="opacity: 0.8;">
+                    <input type="hidden" id="role-form-charid">
+                </div>
+                <div class="form-group">
+                    <label>Přidělená úroveň oprávnění v MDT</label>
+                    <select id="role-form-select">
+                        <option value="officer">Strážník (Officer) - Základní MDT, lustrace</option>
+                        <option value="detective">Detektiv (Detective) - Spisy, balistika, zbraně</option>
+                        <option value="supervisor">Supervisor / Poručík - Zatykače, auditní logy</option>
+                        <option value="command">Velení (Command) - Správa personálu, mazání BOLO</option>
+                        <option value="admin">Administrátor (Admin) - Plná práva do celého systému</option>
+                    </select>
+                </div>
+                <div class="role-desc-card" id="role-permissions-info">
+                    <!-- Popis oprávnění -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" data-close="modal-role">Zrušit</button>
+                <button class="btn-primary" id="btn-confirm-role">Uložit oprávnění</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modální okno: Nové oznámení na nástěnku -->
+    <div class="modal-backdrop" id="modal-bulletin">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h3>Nové oznámení oddělení</h3>
+                <button class="modal-close" data-close="modal-bulletin">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Titulek oznámení</label>
+                    <input type="text" id="bulletin-form-title" placeholder="např. Zvýšená pohotovost v Sandy Shores">
+                </div>
+                <div class="form-group">
+                    <label>Zpráva</label>
+                    <textarea id="bulletin-form-content" rows="4" placeholder="Text oznámení..."></textarea>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label><input type="checkbox" id="bulletin-form-pinned"> Připnout navrch nástěnky</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" data-close="modal-bulletin">Zrušit</button>
+                <button class="btn-primary" id="btn-confirm-bulletin">Zveřejnit</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

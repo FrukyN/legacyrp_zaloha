@@ -1,7 +1,7 @@
 local firstCheck = true
 local resourceName = GetCurrentResourceName()
-local scriptName = GetResourceMetadata(resourceName, 'name')
-local currentVersion = GetResourceMetadata(resourceName, 'version')
+local scriptName = GetResourceMetadata(resourceName, 'name', 0)
+local currentVersion = GetResourceMetadata(resourceName, 'version', 0)
 local colorCode = ('\27[38;2;%d;%d;%dm'):format(46, 164, 247)
 
 local function printUpdateInfo(message)

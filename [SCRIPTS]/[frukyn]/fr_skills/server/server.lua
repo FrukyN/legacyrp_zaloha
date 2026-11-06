@@ -1,5 +1,7 @@
+local Ox = require '@ox_core.lib.init'
 local playerSkills = {}
 local dirtyPlayers = {}
+local lastSkillAdd = {}
 
 local function getDefaultSkills()
     local tbl = {}
@@ -56,12 +58,14 @@ end)
 AddEventHandler('ox:playerLogout', function(source)
     savePlayerSkills(source)
     playerSkills[source] = nil
+    lastSkillAdd[source] = nil
 end)
 
 AddEventHandler('playerDropped', function()
     local src = source
     savePlayerSkills(src)
     playerSkills[src] = nil
+    lastSkillAdd[src] = nil
 end)
 
 -- Podpora pro restart scriptu za běhu serveru
@@ -80,8 +84,16 @@ RegisterNetEvent('fr_skills:server:addSkill', function(skillName, amount)
     local pData = playerSkills[src]
     if not pData or not Config.Skills[skillName] then return end
 
+    local now = GetGameTimer()
+    lastSkillAdd[src] = lastSkillAdd[src] or {}
+    if lastSkillAdd[src][skillName] and (now - lastSkillAdd[src][skillName]) < 400 then
+        return
+    end
+    lastSkillAdd[src][skillName] = now
+
     amount = tonumber(amount) or 0.0
-    if amount <= 0 or amount > 1.0 then return end
+    local maxGain = Config.Skills[skillName].gain or 0.1
+    if amount <= 0 or amount > (maxGain * 2) then return end
 
     local current = pData.data[skillName] or 0.0
     if current >= 100.0 then return end
@@ -91,10 +103,17 @@ RegisterNetEvent('fr_skills:server:addSkill', function(skillName, amount)
     dirtyPlayers[src] = true
 end)
 
+AddEventHandler('onResourceStop', function(resourceName)
+    if GetCurrentResourceName() ~= resourceName then return end
+    for src in pairs(dirtyPlayers) do
+        savePlayerSkills(src)
+    end
+end)
+
 CreateThread(function()
     while true do
         Wait(5 * 60000)
-        for src, _ in pairs(dirtyPlayers) do
+        for src in pairs(dirtyPlayers) do
             savePlayerSkills(src)
         end
     end

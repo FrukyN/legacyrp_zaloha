@@ -1,3 +1,4 @@
+local Ox = require '@ox_core.lib.init'
 local activeCarries = {} -- [carrierId] = targetId
 local carriedBy = {}     -- [targetId] = carrierId
 local pendingRequests = {} -- [targetId] = true (ochrana proti spamu žádostí)

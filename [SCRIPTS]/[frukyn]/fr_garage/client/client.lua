@@ -280,7 +280,7 @@ for id, g in pairs(Config.Garages) do
         end,
         nearby = function(self)
             -- Vykreslení markeru na zemi (typ 1 = válec / kruh)
-            DrawMarker(1, self.coords.x, self.coords.y, self.coords.z - 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, self.interactDistance * 2.0, self.interactDistance * 2.0, 0.8, 45, 140, 235, 150, false, false, 2, false, nil, nil, false)
+            DrawMarker(1, self.coords.x, self.coords.y, self.coords.z - 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, self.interactDistance * 2.0, self.interactDistance * 2.0, 0.8, 45, 140, 235, 150, false, false, 2, false, '', '', false)
 
             local inRange = self.currentDistance <= self.interactDistance
             local veh = GetVehiclePedIsIn(cache.ped, false)
@@ -326,7 +326,8 @@ for id, g in pairs(Config.Garages) do
 end
 
 RegisterCommand('frgarage_impound', function()
-    local veh = GetClosestVehicle(GetEntityCoords(cache.ped), 8.0, 0, 70)
+    local coords = GetEntityCoords(cache.ped)
+    local veh = GetClosestVehicle(coords.x, coords.y, coords.z, 8.0, 0, 70)
     if veh == 0 then return notify('V okolí není vozidlo.', 'error') end
     local form = lib.inputDialog('Odtah vozidla', {
         { type = 'input', label = 'Důvod', required = true, max = 255 },

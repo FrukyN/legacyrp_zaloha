@@ -45,6 +45,10 @@ RegisterNetEvent('fr_carkeys:server:unlockLockpick', function(netId)
     local entity = NetworkGetEntityFromNetworkId(netId)
     if not DoesEntityExist(entity) then return end
 
+    -- Kontrola vzdálenosti
+    local ped = GetPlayerPed(src)
+    if #(GetEntityCoords(ped) - GetEntityCoords(entity)) > 4.5 then return end
+
     -- Ověření, že má hráč opravdu šperhák
     if exports.ox_inventory:GetItemCount(src, Config.LockpickItem) < 1 then return end
 
@@ -58,15 +62,26 @@ RegisterNetEvent('fr_carkeys:server:setHotwired', function(netId)
     local entity = NetworkGetEntityFromNetworkId(netId)
     if not DoesEntityExist(entity) then return end
 
+    -- Ověření, že hráč sedí ve vozidle na místě řidiče
+    local ped = GetPlayerPed(src)
+    if GetVehiclePedIsIn(ped, false) ~= entity or GetPedInVehicleSeat(entity, -1) ~= ped then
+        return
+    end
+
+    -- Ověření, že má hráč šperhák
+    if exports.ox_inventory:GetItemCount(src, Config.LockpickItem) < 1 then return end
+
     Entity(entity).state:set('hotwired', true, true)
 end)
 
 -- Zlomení šperháku při selhání
 RegisterNetEvent('fr_carkeys:server:breakLockpick', function()
     local src = source
-    if math.random(1, 100) <= Config.Lockpick.BreakChance then
-        exports.ox_inventory:RemoveItem(src, Config.LockpickItem, 1)
-        TriggerClientEvent('ox_lib:notify', src, { type = 'error', description = 'Šperhák se zlomil!' })
+    if exports.ox_inventory:GetItemCount(src, Config.LockpickItem) >= 1 then
+        if math.random(1, 100) <= Config.Lockpick.BreakChance then
+            exports.ox_inventory:RemoveItem(src, Config.LockpickItem, 1)
+            TriggerClientEvent('ox_lib:notify', src, { type = 'error', description = 'Šperhák se zlomil!' })
+        end
     end
 end)
 
@@ -209,11 +224,34 @@ local function removeCarKey(source, plate, amount)
 end
 exports('RemoveCarKey', removeCarKey)
 
--- Přidání klíče z klientských scriptů (např. autoškola, půjčovna)
+-- Přidání klíče z klientských scriptů (např. autoškola, půjčovna) - se zabezpečením
 RegisterNetEvent('fr_carkeys:server:giveKeyClient', function(plate, modelName)
     local src = source
     if not plate then return end
-    giveCarKey(src, plate, modelName or 'Autoškola')
+
+    local cleanPlate = formatPlate(plate)
+    local ped = GetPlayerPed(src)
+    local veh = GetVehiclePedIsIn(ped, false)
+
+    -- Zabezpečení: Hráč musí sedět přímo ve vozidle s danou SPZ
+    if veh ~= 0 then
+        local currentPlate = formatPlate(GetVehicleNumberPlateText(veh))
+        if currentPlate == cleanPlate then
+            giveCarKey(src, cleanPlate, modelName or 'Služební')
+            return
+        end
+    end
+
+    -- Pokud nesedí přímo v autě, zkontrolujeme vozidla v jeho těsné blízkosti (do 4 metrů)
+    local coords = GetEntityCoords(ped)
+    for _, nearbyVeh in ipairs(GetAllVehicles()) do
+        if #(GetEntityCoords(nearbyVeh) - coords) <= 4.5 then
+            if formatPlate(GetVehicleNumberPlateText(nearbyVeh)) == cleanPlate then
+                giveCarKey(src, cleanPlate, modelName or 'Služební')
+                return
+            end
+        end
+    end
 end)
 
 -- Odebrání klíče z klientských scriptů

@@ -1,5 +1,5 @@
 local options = {}
-local emotes = lib.load('shared.data.emotes.dance_emotes')
+local emotes = require 'shared.data.emotes.dance_emotes'
 
 emotes = lib.table.deepclone(emotes)
 

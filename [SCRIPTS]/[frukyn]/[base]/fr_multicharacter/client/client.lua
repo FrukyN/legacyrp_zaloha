@@ -133,7 +133,7 @@ local function closeSelection()
     lib.hideContext(false)
     ShutdownLoadingScreenNui()
     destroyCamera()
-    DoScreenFadeIn(450)
+    DoScreenFadeIn(1000)
 end
 
 local openSelection

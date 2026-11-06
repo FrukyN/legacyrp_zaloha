@@ -65,19 +65,27 @@ RegisterNetEvent('unijob:server:silentAlarm', function(jobName, coords)
     local jobConfig = Config.Jobs[jobName]
     if not jobConfig then return end
 
-    -- ZDE NAPOJ SVŮJ DISPATCH SYSTÉM
-    print(('[SILENT ALARM] Spuštěn tichý alarm u frakce: %s na souřadnicích: %s'):format(jobConfig.label, tostring(coords)))
-
-    -- Základní notifikace pro všechny policisty ve službě
-    local players = Ox.GetPlayers({ inService = 'police' })
-    for i = 1, #players do
-        local cop = players[i]
-        TriggerClientEvent('ox_lib:notify', cop.source, {
-            title = 'Tichý alarm!',
-            description = ('Byl spuštěn tichý poplach v objektu: %s'):format(jobConfig.label),
-            type = 'error',
-            duration = 8000
+    -- Napojení na fr_dispatch
+    if GetResourceState('fr_dispatch') == 'started' then
+        exports['fr_dispatch']:CustomAlert({
+            alertType = 'silent_alarm',
+            title = 'Tichý poplach objektu: ' .. jobConfig.label,
+            coords = coords,
+            caller = jobConfig.label,
+            description = ('Byl spuštěn tichý alarm v objektu frakce %s.'):format(jobConfig.label)
         })
+    else
+        -- Základní notifikace pro všechny policisty ve službě
+        local players = Ox.GetPlayers({ inService = 'police' })
+        for i = 1, #players do
+            local cop = players[i]
+            TriggerClientEvent('ox_lib:notify', cop.source, {
+                title = 'Tichý alarm!',
+                description = ('Byl spuštěn tichý poplach v objektu: %s'):format(jobConfig.label),
+                type = 'error',
+                duration = 8000
+            })
+        end
     end
 end)
 
